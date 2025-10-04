@@ -25,7 +25,7 @@
 ml/demoprpoj/dataset*/
 ml/demoprpoj/cubicasa5k/
 ml/demoprpoj/output/
-ml/demoprpoj/runs/
+# ml/demoprpoj/runs/
 ml/demoprpoj/checkpoints/
 ml/demoprpoj/github/
 ml/demoprpoj/github/floor-plan-room-segmentation/
