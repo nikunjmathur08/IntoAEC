@@ -1,0 +1,10 @@
+path: C:\Users\Shaad\Downloads\demoprpoj\dataset
+
+train: train/images
+val: valid/images
+
+# test is optional — remove it if you don't have test images
+# test: test/images  
+
+nc: 1
+names: ['room']

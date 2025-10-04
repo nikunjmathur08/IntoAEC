@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 33
+names: ['Balcony', 'Bed', 'Bedroom', 'Dining Room', 'Dining table', 'Foyer', 'Kitchen', 'Living Room', 'Sofa', 'Study-table', 'Terrace', 'Terrace Lounge', 'Wardrobe', 'attachBedroom', 'balcoa', 'commode', 'door', 'dress', 'duct', 'fridge', 'garage', 'kitchen-slab', 'lift', 'lobby', 'sink', 'stove', 'study', 'toilet', 'tv', 'utility', 'walkin', 'wash', 'washing-machine']
+
+roboflow:
+  workspace: shaad-vezb0
+  project: floor-plan-segmentation-dtr4r-dtk5k
+  version: 1
+  license: MIT
+  url: https://universe.roboflow.com/shaad-vezb0/floor-plan-segmentation-dtr4r-dtk5k/dataset/1

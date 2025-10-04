@@ -3,11 +3,9 @@ from ultralytics import YOLO
 import cv2
 
 # ========== CONFIG ==========
-# Get the directory where this script is located
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(SCRIPT_DIR, "runs/detect/train2/weights/best.pt")  # or your custom model .pt
-IMAGE_PATH = os.path.join(SCRIPT_DIR, "test-blueprint2.jpeg")  # input image
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, "runs/detect/predict")
+MODEL_PATH = "runs/detect/train2/weights/best.pt"  # or your custom model .pt
+IMAGE_PATH = "test-blueprint1.jpeg"  # input image
+OUTPUT_DIR = "runs/detect/predict"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ========== RUN YOLO ==========
