@@ -1,0 +1,55 @@
+# Git LFS configuration for IntoAEC
+# This file tells Git which files should be stored using Git LFS
+# ML Model files
+*.pt filter=lfs diff=lfs merge=lfs -text
+*.pth filter=lfs diff=lfs merge=lfs -text
+*.h5 filter=lfs diff=lfs merge=lfs -text
+*.hdf5 filter=lfs diff=lfs merge=lfs -text
+*.pkl filter=lfs diff=lfs merge=lfs -text
+*.joblib filter=lfs diff=lfs merge=lfs -text
+*.onnx filter=lfs diff=lfs merge=lfs -text
+*.tflite filter=lfs diff=lfs merge=lfs -text
+*.pb filter=lfs diff=lfs merge=lfs -text
+*.safetensors filter=lfs diff=lfs merge=lfs -text
+# Large data files
+*.bin filter=lfs diff=lfs merge=lfs -text
+*.dat filter=lfs diff=lfs merge=lfs -text
+*.data filter=lfs diff=lfs merge=lfs -text
+# Large image files (if any)
+*.tiff filter=lfs diff=lfs merge=lfs -text
+*.tif filter=lfs diff=lfs merge=lfs -text
+# Large video files (if any)
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.avi filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+# Large audio files (if any)
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.flac filter=lfs diff=lfs merge=lfs -text
+# Large archives
+*.zip filter=lfs diff=lfs merge=lfs -text
+*.tar.gz filter=lfs diff=lfs merge=lfs -text
+*.tar.bz2 filter=lfs diff=lfs merge=lfs -text
+*.7z filter=lfs diff=lfs merge=lfs -text
+# Large datasets
+*.csv filter=lfs diff=lfs merge=lfs -text
+*.json filter=lfs diff=lfs merge=lfs -text
+*.parquet filter=lfs diff=lfs merge=lfs -text
+# Specific large files in ml directory
+ml/**/*.pt filter=lfs diff=lfs merge=lfs -text
+ml/**/*.pth filter=lfs diff=lfs merge=lfs -text
+ml/**/*.h5 filter=lfs diff=lfs merge=lfs -text
+ml/**/*.pkl filter=lfs diff=lfs merge=lfs -text
+ml/**/*.joblib filter=lfs diff=lfs merge=lfs -text
+# YOLO model files
+**/yolov8*.pt filter=lfs diff=lfs merge=lfs -text
+**/yolov5*.pt filter=lfs diff=lfs merge=lfs -text
+**/yolov*.pt filter=lfs diff=lfs merge=lfs -text
+# Detectron2 model files
+**/model_*.pth filter=lfs diff=lfs merge=lfs -text
+**/checkpoint_*.pth filter=lfs diff=lfs merge=lfs -text
+**/final.pth filter=lfs diff=lfs merge=lfs -text
+# SAM model files
+**/sam_*.pth filter=lfs diff=lfs merge=lfs -text
+# Other large files that might be in the repo
+**/*.weights filter=lfs diff=lfs merge=lfs -text
+**/*.ckpt filter=lfs diff=lfs merge=lfs -text

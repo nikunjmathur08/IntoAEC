@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Frontend - Next.js Development
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: deps  # Use deps stage for development
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      # Mount source code for hot reload
+      - ./client:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    depends_on:
+      - backend
+    networks:
+      - intoaec-network
+    restart: unless-stopped
+
+  # Backend - Python Development
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
+    volumes:
+      # Mount source code for hot reload
+      - ./server:/app
+      - ./ml:/app/ml:ro
+      - ./server/temp:/app/temp
+      - ./server/uploads:/app/uploads
+    command: python main_secure.py --reload
+    networks:
+      - intoaec-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  intoaec-network:
+    driver: bridge
