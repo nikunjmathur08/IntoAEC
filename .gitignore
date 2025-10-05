@@ -21,14 +21,21 @@
 *.avi
 *.mov
 
-# Large directories - but allow runs and some others
+# Large directories - exclude large datasets and temp files
 ml/demoprpoj/dataset*/
 ml/demoprpoj/cubicasa5k/
-# ml/demoprpoj/output/
-# ml/demoprpoj/runs/ - commented out to allow runs folder
-# ml/demoprpoj/checkpoints/ - commented out to allow checkpoints
 ml/demoprpoj/github/
 ml/demoprpoj/github/floor-plan-room-segmentation/
+ml/demoprpoj/mini/
+ml/demoprpoj/dataset0/
+
+# Temporary and output directories
+server/temp/
+runs/
+ml/demoprpoj/runs/detect/predict*/
+ml/demoprpoj/runs/detect/predict*/*.jpg
+ml/demoprpoj/runs/detect/predict*/*.png
+ml/demoprpoj/runs/detect/predict*/*.txt
 
 # Python cache
 __pycache__/
