@@ -10,6 +10,9 @@
 # *.onnx
 # *.safetensors
 
+# Large model files that exceed GitHub LFS limits
+ml/demoprpoj/checkpoints/sam_vit_h_4b8939.pth
+
 # Dataset files - but allow some specific ones
 # *.jpg
 # *.jpeg
