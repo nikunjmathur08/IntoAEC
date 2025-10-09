@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { getLatestFileForSession, createDataUrl, getFileDisplayType, getAnalysisResults } from "../lib/localStorageUtils";
+import { getClassColorHex, getClassColorRGBA } from "../lib/classColors";
 import { 
   FaHome, 
   FaFolder, 
@@ -306,9 +307,10 @@ export default function Dashboard() {
 
   const displayImage = getDisplayImage();
 
-  // Animation loop for pulsing highlight effect
+  // Animation loop for pulsing highlight effect and persistent scale line
   useEffect(() => {
-    if (!highlightedDetection) return;
+    // Run animation if there's a highlighted detection OR a scale line OR drawing in progress
+    if (!highlightedDetection && !scaleLine && !isDrawing) return;
     
     const animate = () => {
       if (imageLoaded && imageElement && canvasRef.current && containerRef.current) {
@@ -337,8 +339,12 @@ export default function Dashboard() {
           // Draw enhanced highlight that works well on both clean and annotated images
           ctx.save();
           
+          // Get class-based color for this detection
+          const className = highlightedDetection.class_name || 'unknown';
+          const classColorHex = getClassColorHex(className);
+          
           // Create a more prominent highlight for annotated view with pulsing effect
-          const highlightColor = viewMode === 'annotated' ? '#FF4444' : '#FF6B35';
+          const highlightColor = classColorHex;
           const glowIntensity = viewMode === 'annotated' ? 35 : 25;
           
           // Add subtle pulsing effect
@@ -357,7 +363,7 @@ export default function Dashboard() {
           ctx.strokeRect(x1 + 3, y1 + 3, (x2 - x1) - 6, (y2 - y1) - 6);
           
           const fillOpacity = (viewMode === 'annotated' ? 0.25 : 0.15) * pulseIntensity;
-          ctx.fillStyle = `rgba(255, 68, 68, ${fillOpacity})`;
+          ctx.fillStyle = getClassColorRGBA(className, fillOpacity);
           ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
           
           ctx.restore();
@@ -381,7 +387,7 @@ export default function Dashboard() {
           ctx.fillText(labelText, x1 + padding, y1 - textHeight - padding);
           
           if (viewMode === 'annotated') {
-            ctx.fillStyle = '#FF4444';
+            ctx.fillStyle = highlightColor;
             ctx.font = 'bold 12px Inter, sans-serif';
             ctx.fillText('HIGHLIGHTED', x1 + padding, y1 - textHeight - padding + textHeight + 2);
           }
@@ -433,74 +439,22 @@ export default function Dashboard() {
         }
       }
       
-      if (highlightedDetection) {
+      // Continue animation if needed
+      if (highlightedDetection || scaleLine || isDrawing) {
         requestAnimationFrame(animate);
       }
     };
     
     animate();
-  }, [highlightedDetection]);
+  }, [highlightedDetection, scaleLine, isDrawing, startPoint, currentPoint, imageLoaded, imageElement, viewMode]);
 
-  // Draw canvas for non-highlighted elements (scale line, drawing mode)
+  // This useEffect is now handled by the animation loop above
+  // Keeping it commented for reference if needed for non-animated elements
+  /*
   useEffect(() => {
-    if (imageLoaded && imageElement && canvasRef.current && containerRef.current && !highlightedDetection) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // Set canvas size to match image
-      canvas.width = imageElement.naturalWidth;
-      canvas.height = imageElement.naturalHeight;
-
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw scale line if exists
-      if (scaleLine) {
-        ctx.strokeStyle = '#3B82F6';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(scaleLine.startX, scaleLine.startY);
-        ctx.lineTo(scaleLine.endX, scaleLine.endY);
-        ctx.stroke();
-
-        // Draw endpoints
-        ctx.fillStyle = '#3B82F6';
-        ctx.beginPath();
-        ctx.arc(scaleLine.startX, scaleLine.startY, 6, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(scaleLine.endX, scaleLine.endY, 6, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Draw label
-        const midX = (scaleLine.startX + scaleLine.endX) / 2;
-        const midY = (scaleLine.startY + scaleLine.endY) / 2;
-        ctx.fillStyle = '#3B82F6';
-        ctx.font = 'bold 16px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${scaleLine.realWorldLength} ${scaleLine.unit}`, midX, midY - 10);
-      }
-
-      // Draw current line being drawn
-      if (isDrawing && startPoint && currentPoint) {
-        ctx.strokeStyle = '#10B981';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath();
-        ctx.moveTo(startPoint.x, startPoint.y);
-        ctx.lineTo(currentPoint.x, currentPoint.y);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Draw start point
-        ctx.fillStyle = '#10B981';
-        ctx.beginPath();
-        ctx.arc(startPoint.x, startPoint.y, 6, 0, 2 * Math.PI);
-        ctx.fill();
-      }
-    }
-  }, [imageLoaded, imageElement, scaleLine, isDrawing, startPoint, currentPoint, highlightedDetection]);
+    // Removed: now handled by main animation loop
+  }, []);
+  */
 
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawingMode || !canvasRef.current) return;
@@ -782,7 +736,10 @@ export default function Dashboard() {
                 <canvas
                   ref={canvasRef}
                   className={`absolute top-0 left-0 w-full h-full ${isDrawingMode ? 'cursor-crosshair' : 'pointer-events-none'}`}
-                  style={{ pointerEvents: isDrawingMode ? 'auto' : 'none' }}
+                  style={{ 
+                    pointerEvents: isDrawingMode ? 'auto' : 'none',
+                    zIndex: isDrawingMode ? 30 : 20,  // Ensure canvas is above image
+                  }}
                   onMouseDown={handleCanvasMouseDown}
                   onMouseMove={handleCanvasMouseMove}
                   onMouseUp={handleCanvasMouseUp}
@@ -1049,31 +1006,80 @@ export default function Dashboard() {
                     {/* Category Content */}
                     {expandedCategories.has(category.name) && (
                       <div className="p-2 space-y-1 bg-white">
-                        {category.detections.map((detection, detIndex) => (
+                        {category.detections.map((detection, detIndex) => {
+                          const classColorHex = getClassColorHex(detection.className);
+                          return (
                           <div key={detIndex} className="space-y-1">
+                            {/* Class Header with Count - shown when there are multiple instances */}
+                            {detection.detectionInstances && detection.detectionInstances.length > 1 && (
+                              <div className="flex items-center justify-between px-2 py-1.5 bg-gray-100 rounded-md border-l-4" style={{ borderLeftColor: classColorHex }}>
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-2.5 h-2.5 rounded-full"
+                                    style={{ backgroundColor: classColorHex }}
+                                  />
+                                  <span className="text-xs font-semibold text-gray-700 capitalize">
+                                    {detection.className}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span 
+                                    className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
+                                    style={{ backgroundColor: classColorHex }}
+                                  >
+                                    {detection.totalCount}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {detection.totalCount === 1 ? 'item' : 'items'}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            
                             {/* Show each individual instance */}
                             {detection.detectionInstances && detection.detectionInstances.length > 0 ? (
-                              detection.detectionInstances.map((instance, instIndex) => (
+                              detection.detectionInstances.map((instance, instIndex) => {
+                                return (
                                 <div
                                   key={instIndex}
                                   onMouseEnter={() => handleDetectionHover(instance)}
                                   onMouseLeave={handleDetectionLeave}
-                                  className={`w-full text-left p-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                                  className={`w-full text-left p-3 rounded-lg transition-all duration-200 cursor-pointer border-l-4 ${
                                     highlightedDetection === instance
-                                      ? 'bg-orange-100 border-2 border-orange-400 shadow-lg transform scale-[1.02]'
-                                      : 'bg-gray-50 hover:bg-orange-50 border border-gray-200 hover:border-orange-300 hover:shadow-md'
+                                      ? 'bg-gray-100 border-2 shadow-lg transform scale-[1.02]'
+                                      : 'bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:shadow-md'
                                   }`}
+                                  style={{
+                                    borderLeftColor: classColorHex,
+                                    ...(highlightedDetection === instance ? { borderColor: classColorHex } : {})
+                                  }}
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="flex-1">
-                                      <h4 className="font-medium text-gray-900 capitalize text-sm">
-                                        {detection.className}
-                                        {detection.detectionInstances!.length > 1 && (
-                                          <span className="text-xs text-gray-500 ml-1">
-                                            #{instIndex + 1}
-                                          </span>
-                                        )}
-                                      </h4>
+                                      <div className="flex items-center gap-2">
+                                        {/* Color indicator dot */}
+                                        <div 
+                                          className="w-3 h-3 rounded-full"
+                                          style={{ backgroundColor: classColorHex }}
+                                        />
+                                        <div className="flex items-center gap-1.5">
+                                          <h4 className="font-medium text-gray-900 capitalize text-sm">
+                                            {detection.className}
+                                          </h4>
+                                          {detection.detectionInstances!.length > 1 ? (
+                                            <span className="text-xs text-gray-500">
+                                              #{instIndex + 1} of {detection.totalCount}
+                                            </span>
+                                          ) : (
+                                            <span 
+                                              className="text-xs font-semibold px-1.5 py-0.5 rounded text-white"
+                                              style={{ backgroundColor: classColorHex }}
+                                            >
+                                              1
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
                                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                                         <span className="text-xs text-gray-500">
                                           {(instance.confidence * 100).toFixed(0)}%
@@ -1098,7 +1104,7 @@ export default function Dashboard() {
                                     </div>
                                     <div className="ml-2">
                                       {highlightedDetection === instance ? (
-                                        <span className="text-orange-500">
+                                        <span style={{ color: classColorHex }}>
                                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                           </svg>
@@ -1114,23 +1120,37 @@ export default function Dashboard() {
                                     </div>
                                   </div>
                                 </div>
-                              ))
+                              );
+                              })
                             ) : (
-                              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="p-3 bg-gray-50 rounded-lg border-l-4 border border-gray-200" style={{ borderLeftColor: classColorHex }}>
                                 <div className="flex items-center justify-between">
                                   <div className="flex-1">
-                                    <h4 className="font-medium text-gray-900 capitalize text-sm">
-                                      {detection.className}
-                                    </h4>
+                                    <div className="flex items-center gap-2">
+                                      <div 
+                                        className="w-3 h-3 rounded-full"
+                                        style={{ backgroundColor: classColorHex }}
+                                      />
+                                      <h4 className="font-medium text-gray-900 capitalize text-sm">
+                                        {detection.className}
+                                      </h4>
+                                      <span 
+                                        className="text-xs font-bold px-2 py-0.5 rounded-full text-white ml-1"
+                                        style={{ backgroundColor: classColorHex }}
+                                      >
+                                        {detection.totalCount}
+                                      </span>
+                                    </div>
                                     <div className="text-xs text-gray-500 mt-1">
-                                      {detection.totalCount} detected
+                                      {detection.totalCount} {detection.totalCount === 1 ? 'item' : 'items'} detected
                                     </div>
                                   </div>
                                 </div>
                               </div>
                             )}
                           </div>
-                        ))}
+                        );
+                        })}
                       </div>
                     )}
                   </div>

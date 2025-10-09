@@ -53,7 +53,7 @@ except ImportError as e:
     print("   Install requirements: pip install easyocr rapidfuzz")
 
 try:
-    from detection_merger import merge_detections, create_combined_visualization, get_combined_summary
+    from detection_merger import merge_detections, create_combined_visualization, get_combined_summary, create_visualization_with_class_colors
     DETECTION_MERGER_AVAILABLE = True
     print("   Detection Merger module loaded successfully")
 except ImportError as e:
@@ -385,9 +385,20 @@ async def analyze_image(
             results = yolo_model(temp_image_path)
             processed_results = process_yolo_results(results, temp_image_path)
             
-            # Save result image
+            # Save result image with class-based colors
             output_image_path = os.path.join(TEMP_DIR, f"yolo_result_{sanitize_filename(file.filename)}")
-            annotated_image = results[0].plot()
+            
+            # Create visualization with class-based colors if available
+            if DETECTION_MERGER_AVAILABLE:
+                annotated_image = create_visualization_with_class_colors(
+                    temp_image_path,
+                    processed_results['detections'],
+                    model_name="YOLO"
+                )
+            else:
+                # Fallback to default YOLO visualization
+                annotated_image = results[0].plot()
+            
             cv2.imwrite(output_image_path, annotated_image)
             result_image_base64 = image_to_base64(output_image_path)
             

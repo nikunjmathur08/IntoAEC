@@ -84,8 +84,27 @@ class Detectron2Predictor:
         # Set model weights
         if os.path.exists(self.model_path):
             self.cfg.MODEL.WEIGHTS = self.model_path
+            print(f"📁 Using custom trained model: {self.model_path}")
         else:
-            raise FileNotFoundError(f"Model weights not found at: {self.model_path}")
+            # Fallback to pretrained COCO model
+            print(f"⚠️ Custom model not found at: {self.model_path}")
+            print(f"📥 Using pretrained COCO Mask R-CNN model instead")
+            self.cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
+            # Use COCO classes instead of custom classes
+            self.num_classes = 80  # COCO has 80 classes
+            self.class_names = [
+                'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
+                'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
+                'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
+                'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
+                'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+                'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
+                'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
+                'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse',
+                'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
+                'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
+            ]
+            print(f"✅ Will use COCO classes: {len(self.class_names)} classes available")
         
         # Set number of classes
         self.cfg.MODEL.ROI_HEADS.NUM_CLASSES = self.num_classes

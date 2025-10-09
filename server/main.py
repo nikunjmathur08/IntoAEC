@@ -40,7 +40,7 @@ except ImportError as e:
     print("   Install requirements: pip install easyocr rapidfuzz")
 
 try:
-    from detection_merger import merge_detections, create_combined_visualization, get_combined_summary
+    from detection_merger import merge_detections, create_combined_visualization, get_combined_summary, create_visualization_with_class_colors
     DETECTION_MERGER_AVAILABLE = True
     print("   Detection Merger module loaded successfully")
 except ImportError as e:
@@ -281,18 +281,26 @@ async def analyze_image(
                 print(f"   Running YOLO inference on: {file.filename}")
                 results = yolo_model(temp_image_path)
                 
-                # Save result image with bounding boxes
+                # Process results
+                processed_results = process_yolo_results(results, temp_image_path)
+                
+                # Save result image with bounding boxes using class-based colors
                 output_image_path = os.path.join(TEMP_DIR, f"yolo_result_{file.filename}")
                 
-                # Use plot method to create annotated image
-                annotated_image = results[0].plot()  # Returns numpy array with annotations
+                # Create visualization with class-based colors if available
+                if DETECTION_MERGER_AVAILABLE:
+                    annotated_image = create_visualization_with_class_colors(
+                        temp_image_path,
+                        processed_results['detections'],
+                        model_name="YOLO"
+                    )
+                else:
+                    # Fallback to default YOLO visualization
+                    annotated_image = results[0].plot()
                 
                 # Save the annotated image using OpenCV
                 cv2.imwrite(output_image_path, annotated_image)
                 print(f"   Saved YOLO result image: {output_image_path}")
-                
-                # Process results
-                processed_results = process_yolo_results(results, temp_image_path)
                 
                 # Convert result image to base64
                 result_image_base64 = image_to_base64(output_image_path)
@@ -323,13 +331,30 @@ async def analyze_image(
                 # Run Detectron2 prediction with filtering
                 results = detectron2_model.predict(temp_image_path)
                 
-                # Save result image
-                output_image_path = os.path.join(TEMP_DIR, f"detectron2_result_{file.filename}")
-                cv2.imwrite(output_image_path, results["visualized_image"])
-                print(f"   Saved Detectron2 result image: {output_image_path}")
-                
                 # Get detection summary
                 summary = detectron2_model.get_detection_summary(results)
+                
+                # Create visualization with class-based colors
+                output_image_path = os.path.join(TEMP_DIR, f"detectron2_result_{file.filename}")
+                if DETECTION_MERGER_AVAILABLE:
+                    # Format detections for visualization
+                    formatted_detections = []
+                    for detection in summary["detection_details"]:
+                        formatted_detections.append({
+                            "class_name": detection["class_name"],
+                            "confidence": detection["confidence"],
+                            "bbox": detection["bbox"]
+                        })
+                    annotated_image = create_visualization_with_class_colors(
+                        temp_image_path,
+                        formatted_detections,
+                        model_name="Detectron2"
+                    )
+                    cv2.imwrite(output_image_path, annotated_image)
+                else:
+                    # Fallback to default Detectron2 visualization
+                    cv2.imwrite(output_image_path, results["visualized_image"])
+                print(f"   Saved Detectron2 result image: {output_image_path}")
                 
                 # Convert result image to base64
                 result_image_base64 = image_to_base64(output_image_path)
@@ -365,13 +390,30 @@ async def analyze_image(
                 # Run analysis
                 results = floorplan_model.analyze(temp_image_path)
                 
-                # Save result image
-                output_image_path = os.path.join(TEMP_DIR, f"floorplan_result_{file.filename}")
-                cv2.imwrite(output_image_path, results["visualized_image"])
-                print(f"   Saved Floorplan result image: {output_image_path}")
-                
                 # Get detection summary
                 summary = floorplan_model.get_detection_summary(results)
+                
+                # Create visualization with class-based colors
+                output_image_path = os.path.join(TEMP_DIR, f"floorplan_result_{file.filename}")
+                if DETECTION_MERGER_AVAILABLE:
+                    # Format detections for visualization
+                    formatted_detections = []
+                    for detection in summary["detection_details"]:
+                        formatted_detections.append({
+                            "class_name": detection["class_name"],
+                            "confidence": detection["confidence"],
+                            "bbox": detection["bbox"]
+                        })
+                    annotated_image = create_visualization_with_class_colors(
+                        temp_image_path,
+                        formatted_detections,
+                        model_name="Floorplan Analyzer"
+                    )
+                    cv2.imwrite(output_image_path, annotated_image)
+                else:
+                    # Fallback to default visualization
+                    cv2.imwrite(output_image_path, results["visualized_image"])
+                print(f"   Saved Floorplan result image: {output_image_path}")
                 
                 # Convert result image to base64
                 result_image_base64 = image_to_base64(output_image_path)
@@ -603,11 +645,20 @@ async def analyze_batch(
                     yolo_results = model(temp_image_path)
                     processed_results = process_yolo_results(yolo_results, temp_image_path)
                     
-                    # Save result image
+                    # Save result image with class-based colors
                     output_image_path = os.path.join(TEMP_DIR, f"batch_yolo_{file.filename}")
                     
-                    # Use plot method to create annotated image
-                    annotated_image = yolo_results[0].plot()
+                    # Create visualization with class-based colors if available
+                    if DETECTION_MERGER_AVAILABLE:
+                        annotated_image = create_visualization_with_class_colors(
+                            temp_image_path,
+                            processed_results['detections'],
+                            model_name="YOLO"
+                        )
+                    else:
+                        # Fallback to default YOLO visualization
+                        annotated_image = yolo_results[0].plot()
+                    
                     cv2.imwrite(output_image_path, annotated_image)
                     result_image_base64 = image_to_base64(output_image_path)
                     
@@ -624,9 +675,26 @@ async def analyze_batch(
                     detectron2_results = model.predict(temp_image_path)
                     summary = model.get_detection_summary(detectron2_results)
                     
-                    # Save result image
+                    # Save result image with class-based colors
                     output_image_path = os.path.join(TEMP_DIR, f"batch_detectron2_{file.filename}")
-                    cv2.imwrite(output_image_path, detectron2_results["visualized_image"])
+                    if DETECTION_MERGER_AVAILABLE:
+                        # Format detections for visualization
+                        formatted_detections = []
+                        for detection in summary["detection_details"]:
+                            formatted_detections.append({
+                                "class_name": detection["class_name"],
+                                "confidence": detection["confidence"],
+                                "bbox": detection["bbox"]
+                            })
+                        annotated_image = create_visualization_with_class_colors(
+                            temp_image_path,
+                            formatted_detections,
+                            model_name="Detectron2"
+                        )
+                        cv2.imwrite(output_image_path, annotated_image)
+                    else:
+                        # Fallback to default Detectron2 visualization
+                        cv2.imwrite(output_image_path, detectron2_results["visualized_image"])
                     result_image_base64 = image_to_base64(output_image_path)
                     
                     # Format results
