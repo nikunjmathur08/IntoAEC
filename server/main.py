@@ -47,6 +47,14 @@ except ImportError as e:
     DETECTION_MERGER_AVAILABLE = False
     print(f"   Detection Merger not available: {e}")
 
+try:
+    from window_detector import detect_windows, create_window_visualization
+    WINDOW_DETECTOR_AVAILABLE = True
+    print("   Window Detector module loaded successfully")
+except ImportError as e:
+    WINDOW_DETECTOR_AVAILABLE = False
+    print(f"   Window Detector not available: {e}")
+
 app = FastAPI(title="IntoAEC YOLO Detection API", version="1.0.0")
 
 # Add CORS middleware to allow frontend connections
@@ -130,6 +138,44 @@ def load_floorplan_analyzer(min_conf=0.4):
     print("   Floorplan Analyzer loaded successfully")
     return floorplan_analyzer
 
+def calculate_detection_dimensions(detection: Dict[str, Any], pixels_per_unit: float = None, scale_unit: str = "meters") -> Dict[str, Any]:
+    """
+    Calculate real-world dimensions for a detection using scale
+    
+    Args:
+        detection: Detection dict with bbox (x1, y1, x2, y2, width, height)
+        pixels_per_unit: Scale in pixels per unit
+        scale_unit: Unit of measurement
+        
+    Returns:
+        Detection dict with added dimension fields (real_width, real_height, real_area)
+    """
+    if pixels_per_unit is None or pixels_per_unit <= 0:
+        # No scale available - return detection unchanged
+        return detection
+    
+    bbox = detection.get("bbox", {})
+    pixel_width = bbox.get("width", 0)
+    pixel_height = bbox.get("height", 0)
+    
+    if pixel_width > 0 and pixel_height > 0:
+        # Calculate real-world dimensions
+        real_width = pixel_width / pixels_per_unit
+        real_height = pixel_height / pixels_per_unit
+        real_area = real_width * real_height
+        
+        # Add to detection
+        detection["dimensions"] = {
+            "width": round(real_width, 2),
+            "height": round(real_height, 2),
+            "area": round(real_area, 2),
+            "unit": scale_unit,
+            "pixel_width": pixel_width,
+            "pixel_height": pixel_height
+        }
+    
+    return detection
+
 def image_to_base64(image_path: str) -> str:
     """Convert image file to base64 string"""
     try:
@@ -203,7 +249,8 @@ async def model_info():
         "available_models": [],
         "yolo": {"available": False, "error": None},
         "detectron2": {"available": DETECTRON2_AVAILABLE, "error": None},
-        "floorplan": {"available": FLOORPLAN_ANALYZER_AVAILABLE, "error": None}
+        "floorplan": {"available": FLOORPLAN_ANALYZER_AVAILABLE, "error": None},
+        "window_detector": {"available": WINDOW_DETECTOR_AVAILABLE, "error": None}
     }
     
     # Check YOLO
@@ -245,6 +292,17 @@ async def model_info():
         except Exception as e:
             info["floorplan"]["error"] = str(e)
     
+    # Check Window Detector
+    if WINDOW_DETECTOR_AVAILABLE:
+        info["window_detector"] = {
+            "available": True,
+            "model_type": "Computer Vision",
+            "description": "Edge detection and contour analysis for window detection"
+        }
+        info["available_models"].append("window_detector")
+    else:
+        info["window_detector"]["error"] = "Window detector module not available"
+    
     return info
 
 @app.post("/analyze")
@@ -254,7 +312,9 @@ async def analyze_image(
     keep_classes: str = Query(None, description="Comma-separated list of classes to keep (e.g., 'floor,Room')"),
     enable_polygon_fitting: bool = Query(False, description="Enable polygon fitting for room detection"),
     min_conf: float = Query(0.4, description="Minimum confidence for floorplan OCR detections"),
-    iou_threshold: float = Query(0.3, description="IoU threshold for merging detections in combined mode")
+    iou_threshold: float = Query(0.3, description="IoU threshold for merging detections in combined mode"),
+    pixels_per_unit: float = Query(None, description="Scale: pixels per unit (e.g., 10.5 pixels per meter)"),
+    scale_unit: str = Query("meters", description="Unit of measurement (e.g., 'meters', 'feet', 'cm')")
 ):
     """
     Analyze uploaded image using specified model (YOLO, Detectron2, Floorplan Analyzer, or Combined)
@@ -284,6 +344,28 @@ async def analyze_image(
                 # Process results
                 processed_results = process_yolo_results(results, temp_image_path)
                 
+                # Add dimensions to YOLO detections if scale is available
+                if pixels_per_unit:
+                    print(f"   Adding dimensions to YOLO detections using scale: {pixels_per_unit:.2f} px/{scale_unit}")
+                    for detection in processed_results['detections']:
+                        calculate_detection_dimensions(detection, pixels_per_unit, scale_unit)
+                
+                # Add window detection if available
+                if WINDOW_DETECTOR_AVAILABLE:
+                    print("   Running window detection...")
+                    window_detections = detect_windows(temp_image_path)
+                    if window_detections:
+                        print(f"   Found {len(window_detections)} windows")
+                        # Add dimensions to window detections
+                        if pixels_per_unit:
+                            for window_det in window_detections:
+                                calculate_detection_dimensions(window_det, pixels_per_unit, scale_unit)
+                        # Add windows to the detections list
+                        processed_results['detections'].extend(window_detections)
+                        processed_results['total_detections'] = len(processed_results['detections'])
+                    else:
+                        print("   No windows detected")
+                
                 # Save result image with bounding boxes using class-based colors
                 output_image_path = os.path.join(TEMP_DIR, f"yolo_result_{file.filename}")
                 
@@ -304,6 +386,14 @@ async def analyze_image(
                 
                 # Convert result image to base64
                 result_image_base64 = image_to_base64(output_image_path)
+                
+                # Add scale info to results
+                processed_results["scale_info"] = {
+                    "pixels_per_unit": pixels_per_unit,
+                    "scale_unit": scale_unit,
+                    "has_scale": pixels_per_unit is not None,
+                    "user_provided_scale": pixels_per_unit is not None
+                }
                 
                 response_data = {
                     "success": True,
@@ -359,15 +449,18 @@ async def analyze_image(
                 # Convert result image to base64
                 result_image_base64 = image_to_base64(output_image_path)
                 
-                # Format results to match YOLO format for consistency
+                # Format results and add dimensions if scale is available
                 formatted_detections = []
                 for detection in summary["detection_details"]:
-                    formatted_detections.append({
+                    det = {
                         "class_id": detection["class_id"],
                         "class_name": detection["class_name"],
                         "confidence": detection["confidence"],
                         "bbox": detection["bbox"]
-                    })
+                    }
+                    # Add real-world dimensions if scale is available
+                    det = calculate_detection_dimensions(det, pixels_per_unit, scale_unit)
+                    formatted_detections.append(det)
                 
                 response_data = {
                     "success": True,
@@ -376,7 +469,13 @@ async def analyze_image(
                     "analysis_results": {
                         "detections": formatted_detections,
                         "total_detections": summary["total_detections"],
-                        "detections_by_class": summary["detections_by_class"]
+                        "detections_by_class": summary["detections_by_class"],
+                        "scale_info": {
+                            "pixels_per_unit": pixels_per_unit,
+                            "scale_unit": scale_unit,
+                            "has_scale": pixels_per_unit is not None,
+                            "user_provided_scale": pixels_per_unit is not None
+                        }
                     },
                     "result_image": result_image_base64,
                     "message": f"Successfully analyzed {file.filename} with Detectron2. Found {summary['total_detections']} detections."
@@ -387,8 +486,8 @@ async def analyze_image(
                 floorplan_model = load_floorplan_analyzer(min_conf=min_conf)
                 print(f"🔍 Running Floorplan Analyzer on: {file.filename}")
                 
-                # Run analysis
-                results = floorplan_model.analyze(temp_image_path)
+                # Run analysis with scale if provided
+                results = floorplan_model.analyze(temp_image_path, pixels_per_unit=pixels_per_unit, scale_unit=scale_unit)
                 
                 # Get detection summary
                 summary = floorplan_model.get_detection_summary(results)
@@ -418,16 +517,25 @@ async def analyze_image(
                 # Convert result image to base64
                 result_image_base64 = image_to_base64(output_image_path)
                 
-                # Format results
+                # Format results and add dimensions
                 formatted_detections = []
                 for detection in summary["detection_details"]:
-                    formatted_detections.append({
+                    det = {
                         "class_id": detection["class_id"],
                         "class_name": detection["class_name"],
                         "confidence": detection["confidence"],
                         "bbox": detection["bbox"],
                         "fuzzy_score": detection.get("fuzzy_score", 0)
-                    })
+                    }
+                    # Add real-world dimensions if scale is available
+                    det = calculate_detection_dimensions(det, pixels_per_unit, scale_unit)
+                    formatted_detections.append(det)
+                
+                # Enhanced scale info
+                scale_info = summary.get("scale_info", {})
+                scale_info["scale_unit"] = scale_unit
+                scale_info["scale_source"] = results.get("scale_source", "none")
+                scale_info["user_provided_scale"] = pixels_per_unit is not None
                 
                 response_data = {
                     "success": True,
@@ -438,7 +546,8 @@ async def analyze_image(
                         "total_detections": summary["total_detections"],
                         "detections_by_class": summary["detections_by_class"],
                         "num_contours": summary.get("num_contours", 0),
-                        "scale_info": summary.get("scale_info", {})
+                        "scale_info": scale_info,
+                        "areas": results.get("areas", [])  # Include contour area calculations
                     },
                     "result_image": result_image_base64,
                     "message": f"Successfully analyzed {file.filename} with Floorplan Analyzer. Found {summary['total_detections']} labels and {summary.get('num_contours', 0)} contours."
@@ -467,6 +576,16 @@ async def analyze_image(
                     print(f"      Found {len(yolo_detections)} YOLO detections")
                 except Exception as e:
                     print(f"   YOLO failed: {e}")
+                
+                # 1.5. Run Window Detection
+                window_detections = []
+                if WINDOW_DETECTOR_AVAILABLE:
+                    try:
+                        print("   Running Window Detection...")
+                        window_detections = detect_windows(temp_image_path)
+                        print(f"      Found {len(window_detections)} windows")
+                    except Exception as e:
+                        print(f"   Window Detection failed: {e}")
                 
                 # 2. Run Detectron2
                 if DETECTRON2_AVAILABLE:
@@ -505,7 +624,7 @@ async def analyze_image(
                             floorplan_model.min_conf = min_conf
                         
                         print("   Running Floorplan Analyzer...")
-                        fp_results = floorplan_model.analyze(temp_image_path)
+                        fp_results = floorplan_model.analyze(temp_image_path, pixels_per_unit=pixels_per_unit, scale_unit=scale_unit)
                         fp_summary = floorplan_model.get_detection_summary(fp_results)
                         
                         # Format Floorplan detections
@@ -523,6 +642,16 @@ async def analyze_image(
                 else:
                     print("   Floorplan Analyzer not available")
                 
+                # Add dimensions to all detections if scale is available
+                if pixels_per_unit:
+                    print(f"   Adding dimensions using scale: {pixels_per_unit:.2f} px/{scale_unit}")
+                    for det in yolo_detections:
+                        calculate_detection_dimensions(det, pixels_per_unit, scale_unit)
+                    for det in detectron2_detections:
+                        calculate_detection_dimensions(det, pixels_per_unit, scale_unit)
+                    for det in floorplan_detections:
+                        calculate_detection_dimensions(det, pixels_per_unit, scale_unit)
+                
                 # Merge detections from all models
                 print(f"   Merging detections (IoU threshold: {iou_threshold})...")
                 merged_detections = merge_detections(
@@ -531,6 +660,20 @@ async def analyze_image(
                     floorplan_detections=floorplan_detections,
                     iou_threshold=iou_threshold
                 )
+                
+                # Add window detections to merged results
+                if window_detections:
+                    print(f"   Adding {len(window_detections)} window detections to merged results...")
+                    # Add source information to window detections
+                    for window_det in window_detections:
+                        # Add dimensions to windows
+                        if pixels_per_unit:
+                            calculate_detection_dimensions(window_det, pixels_per_unit, scale_unit)
+                        window_det['source'] = 'window_detector'
+                        window_det['sources'] = ['window_detector']
+                        window_det['source_confidences'] = {'window_detector': window_det['confidence']}
+                        window_det['num_models_detected'] = 1
+                    merged_detections.extend(window_detections)
                 
                 print(f"   Merged to {len(merged_detections)} unique detections")
                 
@@ -564,7 +707,13 @@ async def analyze_image(
                         "detections_by_class": combined_summary["detections_by_class"],
                         "detections_by_source_count": combined_summary["detections_by_source_count"],
                         "model_contributions": combined_summary["model_contributions"],
-                        "unique_classes": combined_summary["unique_classes"]
+                        "unique_classes": combined_summary["unique_classes"],
+                        "scale_info": {
+                            "pixels_per_unit": pixels_per_unit,
+                            "scale_unit": scale_unit,
+                            "has_scale": pixels_per_unit is not None,
+                            "user_provided_scale": pixels_per_unit is not None
+                        }
                     },
                     "result_image": result_image_base64,
                     "message": (
@@ -572,7 +721,8 @@ async def analyze_image(
                         f"Found {combined_summary['total_detections']} unique detections "
                         f"({combined_summary['model_contributions']['yolo']} YOLO, "
                         f"{combined_summary['model_contributions']['detectron2']} Detectron2, "
-                        f"{combined_summary['model_contributions']['floorplan']} Floorplan). "
+                        f"{combined_summary['model_contributions']['floorplan']} Floorplan, "
+                        f"{combined_summary['model_contributions']['window_detector']} Windows). "
                         f"{combined_summary['detections_by_source_count'].get(3, 0)} detections confirmed by all 3 models."
                     )
                 }
@@ -644,6 +794,13 @@ async def analyze_batch(
                     # YOLO processing
                     yolo_results = model(temp_image_path)
                     processed_results = process_yolo_results(yolo_results, temp_image_path)
+                    
+                    # Add window detection if available
+                    if WINDOW_DETECTOR_AVAILABLE:
+                        window_detections = detect_windows(temp_image_path)
+                        if window_detections:
+                            processed_results['detections'].extend(window_detections)
+                            processed_results['total_detections'] = len(processed_results['detections'])
                     
                     # Save result image with class-based colors
                     output_image_path = os.path.join(TEMP_DIR, f"batch_yolo_{file.filename}")
@@ -744,6 +901,7 @@ if __name__ == "__main__":
     print(f"📁 YOLO Model path: {MODEL_PATH}")
     print(f"📁 Temp directory: {TEMP_DIR}")
     print(f"🤖 Detectron2 available: {DETECTRON2_AVAILABLE}")
+    print(f"🪟 Window Detector available: {WINDOW_DETECTOR_AVAILABLE}")
     
     # Try to load models on startup
     print("\n🔧 Testing model availability...")

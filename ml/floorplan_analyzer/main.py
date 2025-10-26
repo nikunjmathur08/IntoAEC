@@ -11,7 +11,7 @@ from fuzzy_wuzzy import correct_labels
 
 warnings.filterwarnings("ignore", message=".*pin_memory.*")
 
-def main(image_path, pth_file, json_file, min_conf=0.4):
+def main(image_path, pth_file, json_file, min_conf=0.4, pixels_per_unit=None, scale_unit="meters"):
     # Load image
     image = cv2.imread(image_path)
     if image is None:
@@ -25,9 +25,19 @@ def main(image_path, pth_file, json_file, min_conf=0.4):
     # Contours
     contours = detect_contours(image)
 
-    # Scale estimation
-    auto_scale = auto_estimate_scale(labels)
-    px_per_unit = auto_scale if auto_scale else None
+    # Scale: use provided or auto-estimate
+    if pixels_per_unit is not None:
+        px_per_unit = pixels_per_unit
+        scale_source = "user_provided"
+        print(f"✅ Using user-provided scale: {px_per_unit:.2f} pixels per {scale_unit}")
+    else:
+        auto_scale = auto_estimate_scale(labels)
+        px_per_unit = auto_scale if auto_scale else None
+        scale_source = "ocr_estimated" if auto_scale else "none"
+        if auto_scale:
+            print(f"⚠️  Using OCR-estimated scale: {px_per_unit:.2f}")
+        else:
+            print("⚠️  No scale available - measurements will be in pixels only")
 
     # Areas
     areas = []
@@ -43,7 +53,9 @@ def main(image_path, pth_file, json_file, min_conf=0.4):
         "labels": labels,
         "contours": len(contours),
         "areas": areas,
-        "scale_px_per_unit": px_per_unit
+        "scale_px_per_unit": px_per_unit,
+        "scale_unit": scale_unit,
+        "scale_source": scale_source
     }
 
     # Save
@@ -51,9 +63,15 @@ def main(image_path, pth_file, json_file, min_conf=0.4):
     export_json_from_pth(pth_file, json_file)
 
     print(f"✅ Saved results to {pth_file} and {json_file}")
+    if px_per_unit:
+        print(f"   Scale: {px_per_unit:.2f} pixels per {scale_unit} ({scale_source})")
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
-        print("Usage: python main.py <image_path> <output.pth> <output.json>")
+        print("Usage: python main.py <image_path> <output.pth> <output.json> [min_conf] [pixels_per_unit] [scale_unit]")
+        print("Example: python main.py floor.jpg output.pth output.json 0.4 10.5 meters")
     else:
-        main(sys.argv[1], sys.argv[2], sys.argv[3])
+        min_conf = float(sys.argv[4]) if len(sys.argv) > 4 else 0.4
+        pixels_per_unit = float(sys.argv[5]) if len(sys.argv) > 5 else None
+        scale_unit = sys.argv[6] if len(sys.argv) > 6 else "meters"
+        main(sys.argv[1], sys.argv[2], sys.argv[3], min_conf, pixels_per_unit, scale_unit)

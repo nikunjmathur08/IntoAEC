@@ -10,6 +10,7 @@ import {
   FaFileAlt, 
   FaRuler, 
   FaEraser,
+  FaSync,
 } from "react-icons/fa";
 
 interface ScaleLine {
@@ -69,6 +70,7 @@ export default function Dashboard() {
   const [highlightTimeout, setHighlightTimeout] = useState<NodeJS.Timeout | null>(null);
   
   const [viewMode, setViewMode] = useState<'original' | 'annotated'>('original');
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
 
   useEffect(() => {
     console.log("Dashboard mounted with token:", userToken);
@@ -564,6 +566,85 @@ export default function Dashboard() {
     console.log("Drawing mode toggled:", !isDrawingMode);
   };
 
+  const handleReanalyzeWithScale = async () => {
+    if (!scaleLine || !fileUrl || !userToken) {
+      alert("Please set a scale first by drawing a line and defining its real-world length.");
+      return;
+    }
+
+    // Calculate pixels per unit from the scale line
+    const pixelLength = Math.sqrt(
+      Math.pow(scaleLine.endX - scaleLine.startX, 2) +
+      Math.pow(scaleLine.endY - scaleLine.startY, 2)
+    );
+    const pixelsPerUnit = pixelLength / scaleLine.realWorldLength;
+
+    if (!pixelsPerUnit || pixelsPerUnit <= 0) {
+      alert("Invalid scale. Please redraw the scale line.");
+      return;
+    }
+
+    setIsReanalyzing(true);
+    try {
+      // Get the latest file
+      const fileInfo = getLatestFileForSession(userToken);
+      if (!fileInfo) {
+        throw new Error("No file found");
+      }
+
+      // Convert base64 to blob and create File object
+      const base64Data = fileInfo.fileData;
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: fileInfo.fileType });
+      const file = new File([blob], fileInfo.originalName, { type: fileInfo.fileType });
+
+      // Re-analyze with each model that was originally used
+      const modelTypes = analysisResults.map(r => r.model_used).filter(m => m);
+      const reanalysisPromises = modelTypes.map(async (modelType) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const url = new URL('http://localhost:8000/analyze');
+        url.searchParams.append('model_type', modelType);
+        url.searchParams.append('pixels_per_unit', pixelsPerUnit.toString());
+        url.searchParams.append('scale_unit', scaleLine.unit);
+
+        const response = await fetch(url.toString(), {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+
+        return await response.json();
+      });
+
+      const newResults = await Promise.all(reanalysisPromises);
+      
+      // Update analysis results
+      setAnalysisResults(newResults);
+      
+      // Save to localStorage
+      const { saveAnalysisResults } = await import("../lib/localStorageUtils");
+      saveAnalysisResults(userToken, newResults);
+
+      console.log("✅ Re-analysis complete with scale:", pixelsPerUnit, scaleLine.unit);
+      alert(`Re-analysis complete! All detections now have dimensions in ${scaleLine.unit}.`);
+    } catch (error) {
+      console.error("Re-analysis error:", error);
+      alert("Failed to re-analyze with scale. Please try again.");
+    } finally {
+      setIsReanalyzing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -830,16 +911,34 @@ export default function Dashboard() {
                 <FaRuler className={`text-sm ${isDrawingMode ? 'text-blue-600' : 'text-gray-600'}`} />
               </button>
               {scaleLine && (
-                <button 
-                  className="p-2 hover:bg-gray-100 rounded transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setScaleLine(null);
-                  }}
-                  title="Clear Scale"
-                >
-                  <FaEraser className="text-gray-600 text-sm" />
-                </button>
+                <>
+                  <button 
+                    className="p-2 hover:bg-gray-100 rounded transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setScaleLine(null);
+                    }}
+                    title="Clear Scale"
+                  >
+                    <FaEraser className="text-gray-600 text-sm" />
+                  </button>
+                  <button 
+                    className={`px-3 py-2 rounded transition-colors flex items-center gap-2 text-xs font-medium ${
+                      isReanalyzing 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                    }`}
+                    onClick={handleReanalyzeWithScale}
+                    disabled={isReanalyzing}
+                    title="Re-analyze with scale to calculate real dimensions"
+                  >
+                    <FaSync className={`text-xs ${isReanalyzing ? 'animate-spin' : ''}`} />
+                    {isReanalyzing ? 'Analyzing...' : 'Apply Scale'}
+                  </button>
+                  <span className="text-xs text-gray-600 px-2 py-1 bg-blue-50 rounded border border-blue-200">
+                    {scaleLine.realWorldLength} {scaleLine.unit}
+                  </span>
+                </>
               )}
             </div>
           </div>
@@ -910,14 +1009,50 @@ export default function Dashboard() {
           )}
 
           {/* Scale Display */}
-          {scaleLine && scaleLine.realWorldLength > 0 && (
-            <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-40">
-              <h4 className="text-xs font-semibold text-gray-900 mb-1">Scale</h4>
-              <p className="text-sm text-gray-600">
-                {scaleLine.realWorldLength} {scaleLine.unit}
-              </p>
-            </div>
-          )}
+          {scaleLine && scaleLine.realWorldLength > 0 && (() => {
+            // Calculate pixel length and ratio
+            const pixelLength = Math.sqrt(
+              Math.pow(scaleLine.endX - scaleLine.startX, 2) +
+              Math.pow(scaleLine.endY - scaleLine.startY, 2)
+            );
+            const pixelsPerUnit = pixelLength / scaleLine.realWorldLength;
+            
+            return (
+              <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-40 min-w-[180px]">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1">
+                  Scale Reference
+                </h4>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Real World:</span>
+                    <span className="text-xs font-medium text-gray-900">
+                      {scaleLine.realWorldLength} {scaleLine.unit}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Pixel Length:</span>
+                    <span className="text-xs font-medium text-gray-700">
+                      {pixelLength.toFixed(0)} px
+                    </span>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">Ratio: </span>
+                      <span className="text-xs font-bold text-blue-600">
+                        1 px = {(1 / pixelsPerUnit).toFixed(3)} {scaleLine.unit}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs text-gray-500"></span>
+                      <span className="text-xs text-gray-500">
+                        ({pixelsPerUnit.toFixed(2)} px per {scaleLine.unit})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Analysis Results Panel - Elegant Combined View */}
@@ -1062,7 +1197,7 @@ export default function Dashboard() {
                                           className="w-3 h-3 rounded-full"
                                           style={{ backgroundColor: classColorHex }}
                                         />
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
                                           <h4 className="font-medium text-gray-900 capitalize text-sm">
                                             {detection.className}
                                           </h4>
@@ -1076,6 +1211,11 @@ export default function Dashboard() {
                                               style={{ backgroundColor: classColorHex }}
                                             >
                                               1
+                                            </span>
+                                          )}
+                                          {instance.dimensions?.area && (
+                                            <span className="text-xs text-gray-600 font-medium">
+                                              ({instance.dimensions.area} {instance.dimensions.unit}²)
                                             </span>
                                           )}
                                         </div>

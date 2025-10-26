@@ -1,3 +1,1765 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:639a22a4cd37c6400dd8099ab8ad317b82670540ad0c7fa98fa6ea4c05ab99f5
-size 40948
+{
+    "labels": [
+        {
+            "text": "7\"2",
+            "confidence": 0.4016485555945239,
+            "position": {
+                "x": 172,
+                "y": 24
+            },
+            "bbox": [
+                [
+                    172,
+                    24
+                ],
+                [
+                    204,
+                    24
+                ],
+                [
+                    204,
+                    48
+                ],
+                [
+                    172,
+                    48
+                ]
+            ],
+            "corrected_text": "7\"2",
+            "fuzzy_score": 16.666666666666664
+        },
+        {
+            "text": "8'0\"",
+            "confidence": 0.9900836359566844,
+            "position": {
+                "x": 545,
+                "y": 25
+            },
+            "bbox": [
+                [
+                    545,
+                    25
+                ],
+                [
+                    581,
+                    25
+                ],
+                [
+                    581,
+                    45
+                ],
+                [
+                    545,
+                    45
+                ]
+            ],
+            "corrected_text": "8'0\"",
+            "fuzzy_score": 0.0
+        },
+        {
+            "text": "105\"",
+            "confidence": 0.8243892393071991,
+            "position": {
+                "x": 764,
+                "y": 24
+            },
+            "bbox": [
+                [
+                    764,
+                    24
+                ],
+                [
+                    812,
+                    24
+                ],
+                [
+                    812,
+                    48
+                ],
+                [
+                    764,
+                    48
+                ]
+            ],
+            "corrected_text": "105\"",
+            "fuzzy_score": 15.384615384615385
+        },
+        {
+            "text": "9'5",
+            "confidence": 0.5490842206776291,
+            "position": {
+                "x": 1013,
+                "y": 27
+            },
+            "bbox": [
+                [
+                    1013,
+                    27
+                ],
+                [
+                    1041,
+                    27
+                ],
+                [
+                    1041,
+                    45
+                ],
+                [
+                    1013,
+                    45
+                ]
+            ],
+            "corrected_text": "9'5",
+            "fuzzy_score": 0.0
+        },
+        {
+            "text": "Front",
+            "confidence": 0.9622660361294194,
+            "position": {
+                "x": 766,
+                "y": 152
+            },
+            "bbox": [
+                [
+                    766,
+                    152
+                ],
+                [
+                    820,
+                    152
+                ],
+                [
+                    820,
+                    176
+                ],
+                [
+                    766,
+                    176
+                ]
+            ],
+            "corrected_text": "Front",
+            "fuzzy_score": 62.5
+        },
+        {
+            "text": "Walk-in",
+            "confidence": 0.9972615834052485,
+            "position": {
+                "x": 182,
+                "y": 186
+            },
+            "bbox": [
+                [
+                    182,
+                    186
+                ],
+                [
+                    254,
+                    186
+                ],
+                [
+                    254,
+                    210
+                ],
+                [
+                    182,
+                    210
+                ]
+            ],
+            "corrected_text": "Walk-in",
+            "fuzzy_score": 66.66666666666667
+        },
+        {
+            "text": "Porch",
+            "confidence": 0.9996341117393716,
+            "position": {
+                "x": 762,
+                "y": 176
+            },
+            "bbox": [
+                [
+                    762,
+                    176
+                ],
+                [
+                    820,
+                    176
+                ],
+                [
+                    820,
+                    200
+                ],
+                [
+                    762,
+                    200
+                ]
+            ],
+            "corrected_text": "Porch",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "Storage",
+            "confidence": 0.998440323831444,
+            "position": {
+                "x": 998,
+                "y": 173
+            },
+            "bbox": [
+                [
+                    998,
+                    173
+                ],
+                [
+                    1075,
+                    173
+                ],
+                [
+                    1075,
+                    203
+                ],
+                [
+                    998,
+                    203
+                ]
+            ],
+            "corrected_text": "Storage",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "Utilities",
+            "confidence": 0.9999560112884005,
+            "position": {
+                "x": 1178,
+                "y": 186
+            },
+            "bbox": [
+                [
+                    1178,
+                    186
+                ],
+                [
+                    1248,
+                    186
+                ],
+                [
+                    1248,
+                    210
+                ],
+                [
+                    1178,
+                    210
+                ]
+            ],
+            "corrected_text": "Utilities",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "Closet",
+            "confidence": 0.9998659204259971,
+            "position": {
+                "x": 187,
+                "y": 207
+            },
+            "bbox": [
+                [
+                    187,
+                    207
+                ],
+                [
+                    252,
+                    207
+                ],
+                [
+                    252,
+                    235
+                ],
+                [
+                    187,
+                    235
+                ]
+            ],
+            "corrected_text": "Closet",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "Bedrm 3",
+            "confidence": 0.9327329574464798,
+            "position": {
+                "x": 366,
+                "y": 204
+            },
+            "bbox": [
+                [
+                    366,
+                    204
+                ],
+                [
+                    448,
+                    204
+                ],
+                [
+                    448,
+                    228
+                ],
+                [
+                    366,
+                    228
+                ]
+            ],
+            "corrected_text": "Bedroom 3",
+            "fuzzy_score": 87.5
+        },
+        {
+            "text": "Bedrm 4",
+            "confidence": 0.9989635634446921,
+            "position": {
+                "x": 482,
+                "y": 206
+            },
+            "bbox": [
+                [
+                    482,
+                    206
+                ],
+                [
+                    562,
+                    206
+                ],
+                [
+                    562,
+                    230
+                ],
+                [
+                    482,
+                    230
+                ]
+            ],
+            "corrected_text": "Bedroom 4",
+            "fuzzy_score": 87.5
+        },
+        {
+            "text": "57 sq ft",
+            "confidence": 0.7288568173051028,
+            "position": {
+                "x": 1002,
+                "y": 196
+            },
+            "bbox": [
+                [
+                    1002,
+                    196
+                ],
+                [
+                    1072,
+                    196
+                ],
+                [
+                    1072,
+                    222
+                ],
+                [
+                    1002,
+                    222
+                ]
+            ],
+            "corrected_text": "57 sq ft",
+            "fuzzy_score": 28.57142857142857
+        },
+        {
+            "text": "69 sq f",
+            "confidence": 0.947179535046718,
+            "position": {
+                "x": 184,
+                "y": 230
+            },
+            "bbox": [
+                [
+                    184,
+                    230
+                ],
+                [
+                    257,
+                    230
+                ],
+                [
+                    257,
+                    259
+                ],
+                [
+                    184,
+                    259
+                ]
+            ],
+            "corrected_text": "69 sq f",
+            "fuzzy_score": 23.529411764705888
+        },
+        {
+            "text": "78 sq ft",
+            "confidence": 0.8046240237117518,
+            "position": {
+                "x": 370,
+                "y": 226
+            },
+            "bbox": [
+                [
+                    370,
+                    226
+                ],
+                [
+                    444,
+                    226
+                ],
+                [
+                    444,
+                    252
+                ],
+                [
+                    370,
+                    252
+                ]
+            ],
+            "corrected_text": "78 sq ft",
+            "fuzzy_score": 28.57142857142857
+        },
+        {
+            "text": "78 sq ft",
+            "confidence": 0.6375223431345979,
+            "position": {
+                "x": 486,
+                "y": 228
+            },
+            "bbox": [
+                [
+                    486,
+                    228
+                ],
+                [
+                    558,
+                    228
+                ],
+                [
+                    558,
+                    254
+                ],
+                [
+                    486,
+                    254
+                ]
+            ],
+            "corrected_text": "78 sq ft",
+            "fuzzy_score": 28.57142857142857
+        },
+        {
+            "text": "Bathroom",
+            "confidence": 0.9973978835304266,
+            "position": {
+                "x": 886,
+                "y": 348
+            },
+            "bbox": [
+                [
+                    886,
+                    348
+                ],
+                [
+                    978,
+                    348
+                ],
+                [
+                    978,
+                    372
+                ],
+                [
+                    886,
+                    372
+                ]
+            ],
+            "corrected_text": "Bathroom",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "72 sq f",
+            "confidence": 0.6419045618894015,
+            "position": {
+                "x": 724,
+                "y": 366
+            },
+            "bbox": [
+                [
+                    724,
+                    366
+                ],
+                [
+                    796,
+                    366
+                ],
+                [
+                    796,
+                    394
+                ],
+                [
+                    724,
+                    394
+                ]
+            ],
+            "corrected_text": "72 sq f",
+            "fuzzy_score": 23.529411764705888
+        },
+        {
+            "text": "48 sq @t",
+            "confidence": 0.5915088600575088,
+            "position": {
+                "x": 904,
+                "y": 370
+            },
+            "bbox": [
+                [
+                    904,
+                    370
+                ],
+                [
+                    976,
+                    370
+                ],
+                [
+                    976,
+                    394
+                ],
+                [
+                    904,
+                    394
+                ]
+            ],
+            "corrected_text": "48 sq @t",
+            "fuzzy_score": 28.57142857142857
+        },
+        {
+            "text": "Kitcnen",
+            "confidence": 0.8820691976751435,
+            "position": {
+                "x": 1126,
+                "y": 378
+            },
+            "bbox": [
+                [
+                    1126,
+                    378
+                ],
+                [
+                    1198,
+                    378
+                ],
+                [
+                    1198,
+                    402
+                ],
+                [
+                    1126,
+                    402
+                ]
+            ],
+            "corrected_text": "Kitchen",
+            "fuzzy_score": 85.71428571428572
+        },
+        {
+            "text": "85 sq ft",
+            "confidence": 0.9972776323031568,
+            "position": {
+                "x": 1126,
+                "y": 400
+            },
+            "bbox": [
+                [
+                    1126,
+                    400
+                ],
+                [
+                    1198,
+                    400
+                ],
+                [
+                    1198,
+                    426
+                ],
+                [
+                    1126,
+                    426
+                ]
+            ],
+            "corrected_text": "85 sq ft",
+            "fuzzy_score": 28.57142857142857
+        },
+        {
+            "text": "Hallway",
+            "confidence": 0.9996495277850143,
+            "position": {
+                "x": 511,
+                "y": 413
+            },
+            "bbox": [
+                [
+                    511,
+                    413
+                ],
+                [
+                    588,
+                    413
+                ],
+                [
+                    588,
+                    440
+                ],
+                [
+                    511,
+                    440
+                ]
+            ],
+            "corrected_text": "Hallway",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "61 sq ft",
+            "confidence": 0.973099786298586,
+            "position": {
+                "x": 514,
+                "y": 436
+            },
+            "bbox": [
+                [
+                    514,
+                    436
+                ],
+                [
+                    586,
+                    436
+                ],
+                [
+                    586,
+                    462
+                ],
+                [
+                    514,
+                    462
+                ]
+            ],
+            "corrected_text": "61 sq ft",
+            "fuzzy_score": 28.57142857142857
+        },
+        {
+            "text": "Bedroom",
+            "confidence": 0.9999484094469477,
+            "position": {
+                "x": 178,
+                "y": 452
+            },
+            "bbox": [
+                [
+                    178,
+                    452
+                ],
+                [
+                    264,
+                    452
+                ],
+                [
+                    264,
+                    478
+                ],
+                [
+                    178,
+                    478
+                ]
+            ],
+            "corrected_text": "Bedroom",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "137 sq ft",
+            "confidence": 0.9493282575075452,
+            "position": {
+                "x": 188,
+                "y": 476
+            },
+            "bbox": [
+                [
+                    188,
+                    476
+                ],
+                [
+                    270,
+                    476
+                ],
+                [
+                    270,
+                    502
+                ],
+                [
+                    188,
+                    502
+                ]
+            ],
+            "corrected_text": "137 sq ft",
+            "fuzzy_score": 26.66666666666667
+        },
+        {
+            "text": "8",
+            "confidence": 0.5466637491071111,
+            "position": {
+                "x": 31,
+                "y": 533
+            },
+            "bbox": [
+                [
+                    31,
+                    533
+                ],
+                [
+                    49,
+                    533
+                ],
+                [
+                    49,
+                    581
+                ],
+                [
+                    31,
+                    581
+                ]
+            ],
+            "corrected_text": "8",
+            "fuzzy_score": 0.0
+        },
+        {
+            "text": "Bathroom 2",
+            "confidence": 0.8260686623295813,
+            "position": {
+                "x": 408,
+                "y": 588
+            },
+            "bbox": [
+                [
+                    408,
+                    588
+                ],
+                [
+                    516,
+                    588
+                ],
+                [
+                    516,
+                    612
+                ],
+                [
+                    408,
+                    612
+                ]
+            ],
+            "corrected_text": "Bathroom 2",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "Dining Room",
+            "confidence": 0.9956610928527422,
+            "position": {
+                "x": 906,
+                "y": 589
+            },
+            "bbox": [
+                [
+                    906,
+                    589
+                ],
+                [
+                    1028,
+                    589
+                ],
+                [
+                    1028,
+                    618
+                ],
+                [
+                    906,
+                    618
+                ]
+            ],
+            "corrected_text": "Dining Room",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "83 sq ft",
+            "confidence": 0.4868141368043839,
+            "position": {
+                "x": 426,
+                "y": 610
+            },
+            "bbox": [
+                [
+                    426,
+                    610
+                ],
+                [
+                    498,
+                    610
+                ],
+                [
+                    498,
+                    634
+                ],
+                [
+                    426,
+                    634
+                ]
+            ],
+            "corrected_text": "83 sq ft",
+            "fuzzy_score": 28.57142857142857
+        },
+        {
+            "text": "257 sq @",
+            "confidence": 0.786673573213198,
+            "position": {
+                "x": 926,
+                "y": 612
+            },
+            "bbox": [
+                [
+                    926,
+                    612
+                ],
+                [
+                    1010,
+                    612
+                ],
+                [
+                    1010,
+                    638
+                ],
+                [
+                    926,
+                    638
+                ]
+            ],
+            "corrected_text": "257 sq @",
+            "fuzzy_score": 22.22222222222222
+        },
+        {
+            "text": "Room",
+            "confidence": 0.999879002571106,
+            "position": {
+                "x": 759,
+                "y": 761
+            },
+            "bbox": [
+                [
+                    759,
+                    761
+                ],
+                [
+                    815,
+                    761
+                ],
+                [
+                    815,
+                    781
+                ],
+                [
+                    759,
+                    781
+                ]
+            ],
+            "corrected_text": "Room",
+            "fuzzy_score": 57.14285714285714
+        },
+        {
+            "text": "145 sq ft",
+            "confidence": 0.6559489855737405,
+            "position": {
+                "x": 716,
+                "y": 780
+            },
+            "bbox": [
+                [
+                    716,
+                    780
+                ],
+                [
+                    798,
+                    780
+                ],
+                [
+                    798,
+                    806
+                ],
+                [
+                    716,
+                    806
+                ]
+            ],
+            "corrected_text": "145 sq ft",
+            "fuzzy_score": 26.66666666666667
+        },
+        {
+            "text": "3",
+            "confidence": 0.725487126895846,
+            "position": {
+                "x": 1327,
+                "y": 845
+            },
+            "bbox": [
+                [
+                    1327,
+                    845
+                ],
+                [
+                    1345,
+                    845
+                ],
+                [
+                    1345,
+                    879
+                ],
+                [
+                    1327,
+                    879
+                ]
+            ],
+            "corrected_text": "3",
+            "fuzzy_score": 19.999999999999996
+        },
+        {
+            "text": "Balcony",
+            "confidence": 0.9999665676173389,
+            "position": {
+                "x": 304,
+                "y": 869
+            },
+            "bbox": [
+                [
+                    304,
+                    869
+                ],
+                [
+                    383,
+                    869
+                ],
+                [
+                    383,
+                    898
+                ],
+                [
+                    304,
+                    898
+                ]
+            ],
+            "corrected_text": "Balcony",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "15*1\"",
+            "confidence": 0.980621289877953,
+            "position": {
+                "x": 252,
+                "y": 1012
+            },
+            "bbox": [
+                [
+                    252,
+                    1012
+                ],
+                [
+                    304,
+                    1012
+                ],
+                [
+                    304,
+                    1036
+                ],
+                [
+                    252,
+                    1036
+                ]
+            ],
+            "corrected_text": "15*1\"",
+            "fuzzy_score": 14.28571428571429
+        },
+        {
+            "text": "17\"'1\"",
+            "confidence": 0.45724282838889896,
+            "position": {
+                "x": 649,
+                "y": 1015
+            },
+            "bbox": [
+                [
+                    649,
+                    1015
+                ],
+                [
+                    693,
+                    1015
+                ],
+                [
+                    693,
+                    1033
+                ],
+                [
+                    649,
+                    1033
+                ]
+            ],
+            "corrected_text": "17\"'1\"",
+            "fuzzy_score": 13.33333333333333
+        },
+        {
+            "text": "17'\"",
+            "confidence": 0.49871763586997986,
+            "position": {
+                "x": 1065,
+                "y": 1015
+            },
+            "bbox": [
+                [
+                    1065,
+                    1015
+                ],
+                [
+                    1111,
+                    1015
+                ],
+                [
+                    1111,
+                    1033
+                ],
+                [
+                    1065,
+                    1033
+                ]
+            ],
+            "corrected_text": "17'\"",
+            "fuzzy_score": 15.384615384615385
+        },
+        {
+            "text": "Entry",
+            "confidence": 0.6941605288297411,
+            "position": {
+                "x": 734,
+                "y": 341
+            },
+            "bbox": [
+                [
+                    734,
+                    341
+                ],
+                [
+                    787,
+                    348
+                ],
+                [
+                    784,
+                    373
+                ],
+                [
+                    731,
+                    366
+                ]
+            ],
+            "corrected_text": "Entry",
+            "fuzzy_score": 100.0
+        },
+        {
+            "text": "Sitting",
+            "confidence": 0.637032239133016,
+            "position": {
+                "x": 696,
+                "y": 753
+            },
+            "bbox": [
+                [
+                    696,
+                    753
+                ],
+                [
+                    759,
+                    761
+                ],
+                [
+                    756,
+                    786
+                ],
+                [
+                    693,
+                    779
+                ]
+            ],
+            "corrected_text": "Sitting",
+            "fuzzy_score": 73.6842105263158
+        }
+    ],
+    "contours": 133,
+    "areas": [
+        {
+            "contour_id": 0,
+            "area_pixels": 67.0,
+            "area_units": 1.05
+        },
+        {
+            "contour_id": 1,
+            "area_pixels": 99.5,
+            "area_units": 1.55
+        },
+        {
+            "contour_id": 2,
+            "area_pixels": 84.0,
+            "area_units": 1.31
+        },
+        {
+            "contour_id": 3,
+            "area_pixels": 83.0,
+            "area_units": 1.3
+        },
+        {
+            "contour_id": 4,
+            "area_pixels": 70.5,
+            "area_units": 1.1
+        },
+        {
+            "contour_id": 5,
+            "area_pixels": 598.5,
+            "area_units": 9.35
+        },
+        {
+            "contour_id": 6,
+            "area_pixels": 697.0,
+            "area_units": 10.89
+        },
+        {
+            "contour_id": 7,
+            "area_pixels": 59.0,
+            "area_units": 0.92
+        },
+        {
+            "contour_id": 8,
+            "area_pixels": 4148.0,
+            "area_units": 64.81
+        },
+        {
+            "contour_id": 9,
+            "area_pixels": 150.0,
+            "area_units": 2.34
+        },
+        {
+            "contour_id": 10,
+            "area_pixels": 172.0,
+            "area_units": 2.69
+        },
+        {
+            "contour_id": 11,
+            "area_pixels": 105.0,
+            "area_units": 1.64
+        },
+        {
+            "contour_id": 12,
+            "area_pixels": 1847.0,
+            "area_units": 28.86
+        },
+        {
+            "contour_id": 13,
+            "area_pixels": 6721.0,
+            "area_units": 105.02
+        },
+        {
+            "contour_id": 14,
+            "area_pixels": 3987.5,
+            "area_units": 62.3
+        },
+        {
+            "contour_id": 15,
+            "area_pixels": 20120.0,
+            "area_units": 314.38
+        },
+        {
+            "contour_id": 16,
+            "area_pixels": 85.0,
+            "area_units": 1.33
+        },
+        {
+            "contour_id": 17,
+            "area_pixels": 82.0,
+            "area_units": 1.28
+        },
+        {
+            "contour_id": 18,
+            "area_pixels": 101.0,
+            "area_units": 1.58
+        },
+        {
+            "contour_id": 19,
+            "area_pixels": 11046.5,
+            "area_units": 172.6
+        },
+        {
+            "contour_id": 20,
+            "area_pixels": 225.0,
+            "area_units": 3.52
+        },
+        {
+            "contour_id": 21,
+            "area_pixels": 158.0,
+            "area_units": 2.47
+        },
+        {
+            "contour_id": 22,
+            "area_pixels": 11800.5,
+            "area_units": 184.38
+        },
+        {
+            "contour_id": 23,
+            "area_pixels": 122.0,
+            "area_units": 1.91
+        },
+        {
+            "contour_id": 24,
+            "area_pixels": 140.5,
+            "area_units": 2.2
+        },
+        {
+            "contour_id": 25,
+            "area_pixels": 117.5,
+            "area_units": 1.84
+        },
+        {
+            "contour_id": 26,
+            "area_pixels": 499.0,
+            "area_units": 7.8
+        },
+        {
+            "contour_id": 27,
+            "area_pixels": 654.5,
+            "area_units": 10.23
+        },
+        {
+            "contour_id": 28,
+            "area_pixels": 103.0,
+            "area_units": 1.61
+        },
+        {
+            "contour_id": 29,
+            "area_pixels": 583.5,
+            "area_units": 9.12
+        },
+        {
+            "contour_id": 30,
+            "area_pixels": 2832.5,
+            "area_units": 44.26
+        },
+        {
+            "contour_id": 31,
+            "area_pixels": 140.0,
+            "area_units": 2.19
+        },
+        {
+            "contour_id": 32,
+            "area_pixels": 204.0,
+            "area_units": 3.19
+        },
+        {
+            "contour_id": 33,
+            "area_pixels": 97.0,
+            "area_units": 1.52
+        },
+        {
+            "contour_id": 34,
+            "area_pixels": 281.0,
+            "area_units": 4.39
+        },
+        {
+            "contour_id": 35,
+            "area_pixels": 4679.0,
+            "area_units": 73.11
+        },
+        {
+            "contour_id": 36,
+            "area_pixels": 9569.5,
+            "area_units": 149.52
+        },
+        {
+            "contour_id": 37,
+            "area_pixels": 241.5,
+            "area_units": 3.77
+        },
+        {
+            "contour_id": 38,
+            "area_pixels": 321.5,
+            "area_units": 5.02
+        },
+        {
+            "contour_id": 39,
+            "area_pixels": 1505.0,
+            "area_units": 23.52
+        },
+        {
+            "contour_id": 40,
+            "area_pixels": 356.0,
+            "area_units": 5.56
+        },
+        {
+            "contour_id": 41,
+            "area_pixels": 101.0,
+            "area_units": 1.58
+        },
+        {
+            "contour_id": 42,
+            "area_pixels": 562.5,
+            "area_units": 8.79
+        },
+        {
+            "contour_id": 43,
+            "area_pixels": 926.5,
+            "area_units": 14.48
+        },
+        {
+            "contour_id": 44,
+            "area_pixels": 773.5,
+            "area_units": 12.09
+        },
+        {
+            "contour_id": 45,
+            "area_pixels": 137.0,
+            "area_units": 2.14
+        },
+        {
+            "contour_id": 46,
+            "area_pixels": 1489.0,
+            "area_units": 23.27
+        },
+        {
+            "contour_id": 47,
+            "area_pixels": 97.0,
+            "area_units": 1.52
+        },
+        {
+            "contour_id": 48,
+            "area_pixels": 15093.0,
+            "area_units": 235.83
+        },
+        {
+            "contour_id": 49,
+            "area_pixels": 80.5,
+            "area_units": 1.26
+        },
+        {
+            "contour_id": 50,
+            "area_pixels": 5577.0,
+            "area_units": 87.14
+        },
+        {
+            "contour_id": 51,
+            "area_pixels": 213.0,
+            "area_units": 3.33
+        },
+        {
+            "contour_id": 52,
+            "area_pixels": 66.0,
+            "area_units": 1.03
+        },
+        {
+            "contour_id": 53,
+            "area_pixels": 95.5,
+            "area_units": 1.49
+        },
+        {
+            "contour_id": 54,
+            "area_pixels": 1593.5,
+            "area_units": 24.9
+        },
+        {
+            "contour_id": 55,
+            "area_pixels": 53.0,
+            "area_units": 0.83
+        },
+        {
+            "contour_id": 56,
+            "area_pixels": 217.5,
+            "area_units": 3.4
+        },
+        {
+            "contour_id": 57,
+            "area_pixels": 57.5,
+            "area_units": 0.9
+        },
+        {
+            "contour_id": 58,
+            "area_pixels": 168.5,
+            "area_units": 2.63
+        },
+        {
+            "contour_id": 59,
+            "area_pixels": 196.5,
+            "area_units": 3.07
+        },
+        {
+            "contour_id": 60,
+            "area_pixels": 133.0,
+            "area_units": 2.08
+        },
+        {
+            "contour_id": 61,
+            "area_pixels": 127.0,
+            "area_units": 1.98
+        },
+        {
+            "contour_id": 62,
+            "area_pixels": 71.0,
+            "area_units": 1.11
+        },
+        {
+            "contour_id": 63,
+            "area_pixels": 111.5,
+            "area_units": 1.74
+        },
+        {
+            "contour_id": 64,
+            "area_pixels": 89.0,
+            "area_units": 1.39
+        },
+        {
+            "contour_id": 65,
+            "area_pixels": 3323.0,
+            "area_units": 51.92
+        },
+        {
+            "contour_id": 66,
+            "area_pixels": 6817.5,
+            "area_units": 106.52
+        },
+        {
+            "contour_id": 67,
+            "area_pixels": 210.0,
+            "area_units": 3.28
+        },
+        {
+            "contour_id": 68,
+            "area_pixels": 112.0,
+            "area_units": 1.75
+        },
+        {
+            "contour_id": 69,
+            "area_pixels": 272.5,
+            "area_units": 4.26
+        },
+        {
+            "contour_id": 70,
+            "area_pixels": 743.0,
+            "area_units": 11.61
+        },
+        {
+            "contour_id": 71,
+            "area_pixels": 3695.5,
+            "area_units": 57.74
+        },
+        {
+            "contour_id": 72,
+            "area_pixels": 193.0,
+            "area_units": 3.02
+        },
+        {
+            "contour_id": 73,
+            "area_pixels": 234.0,
+            "area_units": 3.66
+        },
+        {
+            "contour_id": 74,
+            "area_pixels": 107.5,
+            "area_units": 1.68
+        },
+        {
+            "contour_id": 75,
+            "area_pixels": 206.5,
+            "area_units": 3.23
+        },
+        {
+            "contour_id": 76,
+            "area_pixels": 209.0,
+            "area_units": 3.27
+        },
+        {
+            "contour_id": 77,
+            "area_pixels": 82.0,
+            "area_units": 1.28
+        },
+        {
+            "contour_id": 78,
+            "area_pixels": 162.0,
+            "area_units": 2.53
+        },
+        {
+            "contour_id": 79,
+            "area_pixels": 99.0,
+            "area_units": 1.55
+        },
+        {
+            "contour_id": 80,
+            "area_pixels": 68.5,
+            "area_units": 1.07
+        },
+        {
+            "contour_id": 81,
+            "area_pixels": 344.5,
+            "area_units": 5.38
+        },
+        {
+            "contour_id": 82,
+            "area_pixels": 198.0,
+            "area_units": 3.09
+        },
+        {
+            "contour_id": 83,
+            "area_pixels": 135.5,
+            "area_units": 2.12
+        },
+        {
+            "contour_id": 84,
+            "area_pixels": 130.5,
+            "area_units": 2.04
+        },
+        {
+            "contour_id": 85,
+            "area_pixels": 741.0,
+            "area_units": 11.58
+        },
+        {
+            "contour_id": 86,
+            "area_pixels": 95.5,
+            "area_units": 1.49
+        },
+        {
+            "contour_id": 87,
+            "area_pixels": 248.5,
+            "area_units": 3.88
+        },
+        {
+            "contour_id": 88,
+            "area_pixels": 89.0,
+            "area_units": 1.39
+        },
+        {
+            "contour_id": 89,
+            "area_pixels": 114.5,
+            "area_units": 1.79
+        },
+        {
+            "contour_id": 90,
+            "area_pixels": 215.0,
+            "area_units": 3.36
+        },
+        {
+            "contour_id": 91,
+            "area_pixels": 202.5,
+            "area_units": 3.16
+        },
+        {
+            "contour_id": 92,
+            "area_pixels": 227.0,
+            "area_units": 3.55
+        },
+        {
+            "contour_id": 93,
+            "area_pixels": 117.0,
+            "area_units": 1.83
+        },
+        {
+            "contour_id": 94,
+            "area_pixels": 130.5,
+            "area_units": 2.04
+        },
+        {
+            "contour_id": 95,
+            "area_pixels": 69.5,
+            "area_units": 1.09
+        },
+        {
+            "contour_id": 96,
+            "area_pixels": 58.5,
+            "area_units": 0.91
+        },
+        {
+            "contour_id": 97,
+            "area_pixels": 130.0,
+            "area_units": 2.03
+        },
+        {
+            "contour_id": 98,
+            "area_pixels": 65.5,
+            "area_units": 1.02
+        },
+        {
+            "contour_id": 99,
+            "area_pixels": 216.5,
+            "area_units": 3.38
+        },
+        {
+            "contour_id": 100,
+            "area_pixels": 109.5,
+            "area_units": 1.71
+        },
+        {
+            "contour_id": 101,
+            "area_pixels": 239.5,
+            "area_units": 3.74
+        },
+        {
+            "contour_id": 102,
+            "area_pixels": 286.0,
+            "area_units": 4.47
+        },
+        {
+            "contour_id": 103,
+            "area_pixels": 209.5,
+            "area_units": 3.27
+        },
+        {
+            "contour_id": 104,
+            "area_pixels": 116.5,
+            "area_units": 1.82
+        },
+        {
+            "contour_id": 105,
+            "area_pixels": 116.5,
+            "area_units": 1.82
+        },
+        {
+            "contour_id": 106,
+            "area_pixels": 84.0,
+            "area_units": 1.31
+        },
+        {
+            "contour_id": 107,
+            "area_pixels": 154.5,
+            "area_units": 2.41
+        },
+        {
+            "contour_id": 108,
+            "area_pixels": 138.0,
+            "area_units": 2.16
+        },
+        {
+            "contour_id": 109,
+            "area_pixels": 201.0,
+            "area_units": 3.14
+        },
+        {
+            "contour_id": 110,
+            "area_pixels": 109.0,
+            "area_units": 1.7
+        },
+        {
+            "contour_id": 111,
+            "area_pixels": 93.0,
+            "area_units": 1.45
+        },
+        {
+            "contour_id": 112,
+            "area_pixels": 99.5,
+            "area_units": 1.55
+        },
+        {
+            "contour_id": 113,
+            "area_pixels": 118.0,
+            "area_units": 1.84
+        },
+        {
+            "contour_id": 114,
+            "area_pixels": 164.0,
+            "area_units": 2.56
+        },
+        {
+            "contour_id": 115,
+            "area_pixels": 104.0,
+            "area_units": 1.62
+        },
+        {
+            "contour_id": 116,
+            "area_pixels": 80.5,
+            "area_units": 1.26
+        },
+        {
+            "contour_id": 117,
+            "area_pixels": 11486.0,
+            "area_units": 179.47
+        },
+        {
+            "contour_id": 118,
+            "area_pixels": 10781.0,
+            "area_units": 168.45
+        },
+        {
+            "contour_id": 119,
+            "area_pixels": 82.0,
+            "area_units": 1.28
+        },
+        {
+            "contour_id": 120,
+            "area_pixels": 840.0,
+            "area_units": 13.12
+        },
+        {
+            "contour_id": 121,
+            "area_pixels": 212.0,
+            "area_units": 3.31
+        },
+        {
+            "contour_id": 122,
+            "area_pixels": 152.5,
+            "area_units": 2.38
+        },
+        {
+            "contour_id": 123,
+            "area_pixels": 2713.5,
+            "area_units": 42.4
+        },
+        {
+            "contour_id": 124,
+            "area_pixels": 5638.5,
+            "area_units": 88.1
+        },
+        {
+            "contour_id": 125,
+            "area_pixels": 180.5,
+            "area_units": 2.82
+        },
+        {
+            "contour_id": 126,
+            "area_pixels": 87.5,
+            "area_units": 1.37
+        },
+        {
+            "contour_id": 127,
+            "area_pixels": 164.0,
+            "area_units": 2.56
+        },
+        {
+            "contour_id": 128,
+            "area_pixels": 153.5,
+            "area_units": 2.4
+        },
+        {
+            "contour_id": 129,
+            "area_pixels": 152.0,
+            "area_units": 2.38
+        },
+        {
+            "contour_id": 130,
+            "area_pixels": 158.5,
+            "area_units": 2.48
+        },
+        {
+            "contour_id": 131,
+            "area_pixels": 130.0,
+            "area_units": 2.03
+        },
+        {
+            "contour_id": 132,
+            "area_pixels": 219.5,
+            "area_units": 3.43
+        }
+    ],
+    "scale_px_per_unit": 8.0
+}

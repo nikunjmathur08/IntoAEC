@@ -156,7 +156,8 @@ def merge_detections(
         confidence_weight = {
             'yolo': 1.0,
             'detectron2': 1.0,
-            'floorplan': 0.9  # Slightly lower weight for OCR-based detections
+            'floorplan': 0.9,  # Slightly lower weight for OCR-based detections
+            'window_detector': 0.8  # Lower weight for computer vision-based window detection
         }
     
     # Prepare all detections with source information
@@ -204,7 +205,8 @@ def merge_detections(
             'bbox': det1['bbox'],
             'sources': [det1['source']],
             'source_confidences': {det1['source']: det1['confidence']},
-            'fuzzy_score': det1.get('fuzzy_score', None)
+            'fuzzy_score': det1.get('fuzzy_score', None),
+            'dimensions': det1.get('dimensions', None)  # Preserve dimensions if available
         }
         
         used_indices.add(i)
@@ -427,10 +429,18 @@ def create_combined_visualization(
         ('yolo',): (255, 0, 0),  # Blue - YOLO only
         ('detectron2',): (255, 0, 255),  # Magenta - Detectron2 only
         ('floorplan',): (0, 255, 0),  # Green - Floorplan only
+        ('window_detector',): (0, 0, 255),  # Red - Window detector only
         ('yolo', 'detectron2'): (255, 165, 0),  # Orange - YOLO + Detectron2
         ('yolo', 'floorplan'): (0, 255, 255),  # Yellow - YOLO + Floorplan
+        ('yolo', 'window_detector'): (128, 0, 128),  # Purple - YOLO + Window detector
         ('detectron2', 'floorplan'): (255, 255, 0),  # Cyan - Detectron2 + Floorplan
+        ('detectron2', 'window_detector'): (255, 192, 203),  # Pink - Detectron2 + Window detector
+        ('floorplan', 'window_detector'): (0, 128, 128),  # Teal - Floorplan + Window detector
         ('yolo', 'detectron2', 'floorplan'): (0, 0, 255),  # Red - All three
+        ('yolo', 'detectron2', 'window_detector'): (255, 20, 147),  # Deep Pink - YOLO + Detectron2 + Window detector
+        ('yolo', 'floorplan', 'window_detector'): (50, 205, 50),  # Lime Green - YOLO + Floorplan + Window detector
+        ('detectron2', 'floorplan', 'window_detector'): (255, 69, 0),  # Orange Red - Detectron2 + Floorplan + Window detector
+        ('yolo', 'detectron2', 'floorplan', 'window_detector'): (75, 0, 130),  # Indigo - All four
     }
     
     for det in merged_detections:
@@ -553,7 +563,7 @@ def get_combined_summary(merged_detections: List[Dict[str, Any]]) -> Dict[str, A
     """
     detections_by_class = {}
     detections_by_source_count = {1: 0, 2: 0, 3: 0}
-    model_contributions = {'yolo': 0, 'detectron2': 0, 'floorplan': 0}
+    model_contributions = {'yolo': 0, 'detectron2': 0, 'floorplan': 0, 'window_detector': 0}
     
     for det in merged_detections:
         # Count by class
@@ -563,12 +573,17 @@ def get_combined_summary(merged_detections: List[Dict[str, Any]]) -> Dict[str, A
         detections_by_class[class_name] += 1
         
         # Count by number of models
-        num_models = det['num_models_detected']
+        num_models = det.get('num_models_detected', 1)
         detections_by_source_count[num_models] = detections_by_source_count.get(num_models, 0) + 1
         
-        # Count model contributions
-        for source in det['sources']:
-            model_contributions[source] += 1
+        # Count model contributions - handle both 'sources' and 'source' fields
+        sources = det.get('sources', [])
+        if not sources and 'source' in det:
+            sources = [det['source']]
+        
+        for source in sources:
+            if source in model_contributions:
+                model_contributions[source] += 1
     
     return {
         'total_detections': len(merged_detections),

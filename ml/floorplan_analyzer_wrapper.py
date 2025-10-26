@@ -25,12 +25,14 @@ class FloorplanAnalyzer:
         self.min_conf = min_conf
         print(f"✅ Floorplan Analyzer initialized (OCR + Contour Detection)")
     
-    def analyze(self, image_path: str):
+    def analyze(self, image_path: str, pixels_per_unit: float = None, scale_unit: str = "meters"):
         """
         Analyze a floor plan image
         
         Args:
             image_path: Path to the floor plan image
+            pixels_per_unit: Optional scale in pixels per unit (if provided by user-drawn scale line)
+            scale_unit: Unit of measurement (e.g., 'meters', 'feet', 'cm')
             
         Returns:
             dict with analysis results including labels, contours, and visualized image
@@ -47,9 +49,19 @@ class FloorplanAnalyzer:
         # Detect contours (room boundaries)
         contours = detect_contours(image)
         
-        # Auto-estimate scale from OCR results
-        auto_scale = auto_estimate_scale(labels)
-        px_per_unit = auto_scale if auto_scale else None
+        # Use provided scale if available, otherwise auto-estimate from OCR
+        if pixels_per_unit is not None:
+            px_per_unit = pixels_per_unit
+            scale_source = "user_provided"
+            print(f"✅ Using user-provided scale: {px_per_unit:.2f} pixels per {scale_unit}")
+        else:
+            auto_scale = auto_estimate_scale(labels)
+            px_per_unit = auto_scale if auto_scale else None
+            scale_source = "ocr_estimated" if auto_scale else "none"
+            if auto_scale:
+                print(f"⚠️  Using OCR-estimated scale: {px_per_unit:.2f}")
+            else:
+                print("⚠️  No scale available - measurements will be in pixels only")
         
         # Calculate areas
         areas = []
@@ -71,6 +83,8 @@ class FloorplanAnalyzer:
             "contours": len(contours),
             "areas": areas,
             "scale_px_per_unit": px_per_unit,
+            "scale_unit": scale_unit,
+            "scale_source": scale_source,
             "visualized_image": visualized_image
         }
         
