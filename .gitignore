@@ -35,10 +35,12 @@ ml/demoprpoj/dataset0/
 # Temporary and output directories
 server/temp/
 runs/
-ml/demoprpoj/runs/detect/predict*/
-ml/demoprpoj/runs/detect/predict*/*.jpg
-ml/demoprpoj/runs/detect/predict*/*.png
-ml/demoprpoj/runs/detect/predict*/*.txt
+ml/demoprpoj/runs/
+ml/runs/
+
+# Large model weight files
+ml/demoprpoj/*.pt
+ml/demoprpoj/*.pth
 
 # Python cache
 __pycache__/
