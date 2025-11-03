@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { getLatestFileForSession, createDataUrl, getFileDisplayType, getAnalysisResults } from "../lib/localStorageUtils";
-import { getClassColorHex, getClassColorRGBA } from "../lib/classColors";
+import { getClassColorHex, getClassColorRGBA, normalizeClassName } from "../lib/classColors";
 import { 
   FaHome, 
   FaFolder, 
@@ -35,7 +35,6 @@ interface CombinedDetection {
 
 interface CategoryGroup {
   name: string;
-  icon: string;
   detections: CombinedDetection[];
   color: string;
 }
@@ -66,7 +65,7 @@ export default function Dashboard() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
   const [highlightedDetection, setHighlightedDetection] = useState<any>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['rooms', 'elements', 'labels']));
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['rooms', 'elements', 'labels', 'Room Summary']));
   const [highlightTimeout, setHighlightTimeout] = useState<NodeJS.Timeout | null>(null);
   
   const [viewMode, setViewMode] = useState<'original' | 'annotated'>('original');
@@ -114,6 +113,46 @@ export default function Dashboard() {
 
     fetchLatestFile();
   }, [userToken]);
+
+  // Load persisted scale from localStorage if available
+  useEffect(() => {
+    if (!userToken) return;
+    try {
+      const saved = localStorage.getItem(`scale_${userToken}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.scaleLine && typeof parsed?.pixelsPerUnit === 'number' && parsed.pixelsPerUnit > 0) {
+          setScaleLine(parsed.scaleLine);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load saved scale:', e);
+    }
+  }, [userToken]);
+
+  // Helper: pixels-per-unit based on current scale
+  const getPixelsPerUnit = (): number | null => {
+    if (!scaleLine || !scaleLine.realWorldLength) return null;
+    const pixelLength = Math.sqrt(
+      Math.pow(scaleLine.endX - scaleLine.startX, 2) +
+      Math.pow(scaleLine.endY - scaleLine.startY, 2)
+    );
+    const ppu = pixelLength / scaleLine.realWorldLength;
+    return ppu > 0 ? ppu : null;
+  };
+
+  // Helper: compute real-world dimensions from bbox
+  const computeScaledDimensions = (bbox: any): { width: number; height: number; area: number; unit: string } | null => {
+    if (!bbox) return null;
+    const ppu = getPixelsPerUnit();
+    if (!ppu) return null;
+    const widthPx = Math.max(0, (bbox.x2 ?? 0) - (bbox.x1 ?? 0));
+    const heightPx = Math.max(0, (bbox.y2 ?? 0) - (bbox.y1 ?? 0));
+    const width = widthPx / ppu;
+    const height = heightPx / ppu;
+    const area = width * height;
+    return { width, height, area, unit: scaleLine!.unit };
+  };
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -244,10 +283,10 @@ export default function Dashboard() {
     const labelTypes = ['label', 'text', 'dimension', 'note', 'symbol', 'scale'];
     
     const categories: CategoryGroup[] = [
-      { name: 'Rooms', icon: '🏠', detections: [], color: 'blue' },
-      { name: 'Elements & Fixtures', icon: '🚪', detections: [], color: 'purple' },
-      { name: 'Labels & Text', icon: '📝', detections: [], color: 'green' },
-      { name: 'Other', icon: '📦', detections: [], color: 'gray' }
+      { name: 'Rooms', detections: [], color: 'blue' },
+      { name: 'Elements & Fixtures', detections: [], color: 'purple' },
+      { name: 'Labels & Text', detections: [], color: 'green' },
+      { name: 'Other', detections: [], color: 'gray' }
     ];
     
     detections.forEach(detection => {
@@ -392,6 +431,30 @@ export default function Dashboard() {
             ctx.fillStyle = highlightColor;
             ctx.font = 'bold 12px Inter, sans-serif';
             ctx.fillText('HIGHLIGHTED', x1 + padding, y1 - textHeight - padding + textHeight + 2);
+          }
+
+          // If scale is set, render quick dimensions tooltip
+          const scaled = computeScaledDimensions(bbox);
+          if (scaled) {
+            const dimText = `${scaled.width.toFixed(2)} x ${scaled.height.toFixed(2)} ${scaled.unit}`;
+            const areaText = `${scaled.area.toFixed(2)} ${scaled.unit}²`;
+            const dimFontSize = 12;
+            const dimPadding = 6;
+            ctx.font = `bold ${dimFontSize}px Inter, sans-serif`;
+            const dimWidth = Math.max(ctx.measureText(dimText).width, ctx.measureText(areaText).width) + dimPadding * 2;
+            const dimHeight = dimFontSize * 2 + dimPadding * 3;
+            const boxX = x1;
+            const boxY = y2 + 8;
+            ctx.fillStyle = 'rgba(0,0,0,0.75)';
+            ctx.fillRect(boxX, boxY, dimWidth, dimHeight);
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(boxX, boxY, dimWidth, dimHeight);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(dimText, boxX + dimPadding, boxY + dimPadding);
+            ctx.fillText(areaText, boxX + dimPadding, boxY + dimPadding + dimFontSize + 3);
           }
         }
 
@@ -678,6 +741,58 @@ export default function Dashboard() {
   const categorizedDetections = categorizeDetections(combinedDetections);
   const totalDetections = getTotalDetections();
   const hasMultipleModels = analysisResults.filter(r => r.success).length > 1;
+
+  // Build room-wise summaries (area + contained components)
+  const buildRoomSummaries = () => {
+    const roomTypes = ['bedroom', 'bathroom', 'kitchen', 'living room', 'dining room', 'toilet', 'wc', 'entry',
+      'restroom', 'hallway', 'corridor', 'balcony', 'terrace', 'garage', 'storage',
+      'laundry', 'office', 'study', 'closet', 'pantry', 'utility', 'foyer', 'entrance', 'porch', 'stairs'];
+
+    // Flatten detection instances
+    const allInstances: any[] = [];
+    combinedDetections.forEach(cd => {
+      (cd.detectionInstances || []).forEach(inst => {
+        allInstances.push(inst);
+      });
+    });
+
+    const rooms = allInstances.filter(inst => {
+      const name = (inst.class_name || '').toLowerCase();
+      return roomTypes.some(rt => name.includes(rt)) && inst.bbox;
+    });
+    const nonRooms = allInstances.filter(inst => !rooms.includes(inst) && inst.bbox);
+
+    const summaries = rooms.map((roomInst, idx) => {
+      const roomName = (roomInst.class_name || 'room').toLowerCase();
+      const scaled = computeScaledDimensions(roomInst.bbox);
+      const unit = scaled?.unit || scaleLine?.unit || '';
+      const area = scaled?.area ?? null;
+
+      // Count components whose bbox center is inside the room bbox
+      const rx1 = roomInst.bbox.x1, ry1 = roomInst.bbox.y1, rx2 = roomInst.bbox.x2, ry2 = roomInst.bbox.y2;
+      const componentCounts: Record<string, number> = {};
+      nonRooms.forEach(inst => {
+        const cx = (inst.bbox.x1 + inst.bbox.x2) / 2;
+        const cy = (inst.bbox.y1 + inst.bbox.y2) / 2;
+        if (cx >= rx1 && cx <= rx2 && cy >= ry1 && cy <= ry2) {
+          const norm = normalizeClassName(inst.class_name || 'item');
+          componentCounts[norm] = (componentCounts[norm] || 0) + 1;
+        }
+      });
+
+      return {
+        displayName: `${roomName} ${idx + 1}`,
+        area,
+        unit,
+        components: componentCounts,
+        color: getClassColorHex(roomInst.class_name || 'room')
+      };
+    });
+
+    return summaries;
+  };
+
+  const roomSummaries = buildRoomSummaries();
 
   const handleDetectionHover = (detection: any) => {
     // Clear any existing timeout
@@ -1107,6 +1222,68 @@ export default function Dashboard() {
 
                 </div>
 
+                {/* Room-wise Summary (Collapsible) */}
+                {roomSummaries.length > 0 && (
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleCategory('Room Summary')}
+                      className={`w-full flex items-center justify-between p-3 transition-colors ${
+                        expandedCategories.has('Room Summary')
+                          ? 'bg-green-50 hover:bg-green-100'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-gray-900">Room Summary</h3>
+                        <span className="text-xs bg-white px-2 py-0.5 rounded-full text-gray-600">
+                          {roomSummaries.length}
+                        </span>
+                      </div>
+                      <svg
+                        className={`w-5 h-5 text-gray-600 transition-transform ${
+                          expandedCategories.has('Room Summary') ? 'transform rotate-180' : ''
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {expandedCategories.has('Room Summary') && (
+                      <div className="p-4 space-y-2 bg-white">
+                        {roomSummaries.map((r, i) => (
+                          <div key={i} className="p-3 bg-white text-black rounded-lg border border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: r.color }} />
+                                <span className="text-sm font-medium capitalize">{r.displayName}</span>
+                              </div>
+                              {r.area != null && (
+                                <span className="text-xs text-gray-600">Area: {r.area.toFixed(2)} {r.unit}²</span>
+                              )}
+                            </div>
+                            {Object.keys(r.components).length > 0 ? (
+                              <div className="mt-2 text-xs text-gray-700">
+                                <span className="font-medium">Components:</span>{' '}
+                                {Object.entries(r.components)
+                                  .sort((a, b) => b[1] - a[1])
+                                  .map(([name, count], idx, arr) => (
+                                    <span key={name}>
+                                      {count} {name}{idx < arr.length - 1 ? ', ' : ''}
+                                    </span>
+                                  ))}
+                              </div>
+                            ) : (
+                              <div className="mt-2 text-xs text-gray-500">No components detected inside this room.</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Categorized Detections */}
                 {categorizedDetections.map((category, catIndex) => (
                   <div key={catIndex} className="border border-gray-200 rounded-lg overflow-hidden">
@@ -1120,7 +1297,6 @@ export default function Dashboard() {
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">{category.icon}</span>
                         <h3 className="text-sm font-semibold text-gray-900">{category.name}</h3>
                         <span className="text-xs bg-white px-2 py-0.5 rounded-full text-gray-600">
                           {category.detections.reduce((sum, det) => sum + det.totalCount, 0)}
@@ -1213,11 +1389,24 @@ export default function Dashboard() {
                                               1
                                             </span>
                                           )}
-                                          {instance.dimensions?.area && (
-                                            <span className="text-xs text-gray-600 font-medium">
-                                              ({instance.dimensions.area} {instance.dimensions.unit}²)
-                                            </span>
-                                          )}
+                                          {(() => {
+                                            const scaled = computeScaledDimensions(instance.bbox);
+                                            if (scaled) {
+                                              return (
+                                                <span className="text-xs text-gray-600 font-medium">
+                                                  ({scaled.width.toFixed(2)} × {scaled.height.toFixed(2)} {scaled.unit}, {scaled.area.toFixed(2)} {scaled.unit}²)
+                                                </span>
+                                              );
+                                            }
+                                            if (instance.dimensions?.area) {
+                                              return (
+                                                <span className="text-xs text-gray-600 font-medium">
+                                                  ({instance.dimensions.area} {instance.dimensions.unit}²)
+                                                </span>
+                                              );
+                                            }
+                                            return null;
+                                          })()}
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-2 mt-1 flex-wrap">

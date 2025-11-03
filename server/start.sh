@@ -26,7 +26,7 @@ echo "📥 Installing requirements..."
 pip install -r requirements.txt
 
 # Check if model file exists
-MODEL_PATH="../ml/demoprpoj/runs/detect/train2/weights/best.pt"
+MODEL_PATH="../ml/demoprpoj/runs/detect/train2/weights/best2.pt"
 if [ ! -f "$MODEL_PATH" ]; then
     echo "⚠️  Warning: Model file not found at $MODEL_PATH"
     echo "   Please make sure your YOLO model is trained and available."

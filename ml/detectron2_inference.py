@@ -26,7 +26,7 @@ class Detectron2Predictor:
         
         # Set default paths
         if model_path is None:
-            model_path = os.path.join(self.script_dir, "demoprpoj/output/model_final.pth")
+            model_path = os.path.join(self.script_dir, "demoprpoj/output/model_final_2.pth")
         if config_path is None:
             config_path = os.path.join(self.script_dir, "demoprpoj/output/config.yaml")
             

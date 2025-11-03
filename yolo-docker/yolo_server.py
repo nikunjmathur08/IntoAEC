@@ -36,7 +36,7 @@ app.add_middleware(
 )
 
 # Configuration
-MODEL_PATH = "/app/model/best.pt"
+MODEL_PATH = "/app/model/best2.pt"
 TEMP_DIR = "/app/temp"
 os.makedirs(TEMP_DIR, exist_ok=True)
 

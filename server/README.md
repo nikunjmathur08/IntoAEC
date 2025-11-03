@@ -25,7 +25,7 @@ A FastAPI server that provides both YOLO and Detectron2-based architectural draw
    ```
 
 3. **Verify Model Paths**
-   - YOLO model: `../ml/demoprpoj/runs/detect/train2/weights/best.pt`
+   - YOLO model: `../ml/demoprpoj/runs/detect/train2/weights/best2.pt`
    - Detectron2 model: `../ml/demoprpoj/output/model_final.pth`
 
 3. **Run Server**

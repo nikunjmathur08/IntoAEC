@@ -68,7 +68,7 @@ app.add_middleware(
 
 # Configuration
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(SCRIPT_DIR, "../ml/demoprpoj/runs/detect/train2/weights/best.pt")
+MODEL_PATH = os.path.join(SCRIPT_DIR, "../ml/demoprpoj/runs/detect/train2/weights/best2.pt")
 TEMP_DIR = os.path.join(SCRIPT_DIR, "temp")
 os.makedirs(TEMP_DIR, exist_ok=True)
 

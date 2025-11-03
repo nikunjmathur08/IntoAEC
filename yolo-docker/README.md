@@ -85,7 +85,7 @@ az container create \
 - `PYTHONUNBUFFERED=1` - Ensures Python output is sent straight to terminal
 
 ### Model Path
-- Model is located at `/app/model/best.pt` inside the container
+- Model is located at `/app/model/best2.pt` inside the container
 - Make sure your trained YOLO model is copied to the `model/` directory
 
 ### Resource Requirements
@@ -115,7 +115,7 @@ az container create \
 ### Common Issues
 
 1. **Model not found error**
-   - Ensure `best.pt` is in the `model/` directory
+   - Ensure `best2.pt` is in the `model/` directory
    - Check file permissions
 
 2. **Out of memory errors**
@@ -168,7 +168,7 @@ docker logs -f <container-id>
 
 ## 🚀 Production Deployment Checklist
 
-- [ ] Model file (`best.pt`) included in container
+- [ ] Model file (`best2.pt`) included in container
 - [ ] Health checks configured
 - [ ] Resource limits set appropriately
 - [ ] Logging configured
