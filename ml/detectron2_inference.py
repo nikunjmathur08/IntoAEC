@@ -233,12 +233,32 @@ class Detectron2Predictor:
                     "polygon": final_polygons[i]      # [[x,y], [x,y], ...]
                 })
         
+        # Extract polygon contours from masks for frontend visualization
+        polygon_contours = []
+        if len(instances) > 0 and instances.has("pred_masks"):
+            masks = instances.pred_masks.numpy()
+            for mask in masks:
+                mask_uint8 = (mask.astype(np.uint8)) * 255
+                contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    # Get the largest contour (outer boundary)
+                    largest_contour = max(contours, key=cv2.contourArea)
+                    # Simplify the contour to reduce points (epsilon = 0.5% of perimeter)
+                    epsilon = 0.005 * cv2.arcLength(largest_contour, True)
+                    simplified = cv2.approxPolyDP(largest_contour, epsilon, True)
+                    # Convert to list of [x, y] points
+                    points = [[int(pt[0][0]), int(pt[0][1])] for pt in simplified]
+                    polygon_contours.append(points)
+                else:
+                    polygon_contours.append([])
+
         # Extract predictions
         predictions = {
             "boxes": instances.pred_boxes.tensor.numpy() if len(instances) > 0 else np.array([]),
             "classes": instances.pred_classes.numpy() if len(instances) > 0 else np.array([]),
             "scores": instances.scores.numpy() if len(instances) > 0 else np.array([]),
-            "masks": instances.pred_masks.numpy() if len(instances) > 0 and instances.has("pred_masks") else None
+            "masks": instances.pred_masks.numpy() if len(instances) > 0 and instances.has("pred_masks") else None,
+            "polygons": polygon_contours if polygon_contours else None
         }
         
         # Create visualization

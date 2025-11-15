@@ -40,7 +40,7 @@ except ImportError as e:
     print("   Install requirements: pip install easyocr rapidfuzz")
 
 try:
-    from detection_merger import merge_detections, create_combined_visualization, get_combined_summary, create_visualization_with_class_colors
+    from detection_merger import merge_detections, create_combined_visualization, get_combined_summary, create_visualization_with_class_colors, calculate_iou
     DETECTION_MERGER_AVAILABLE = True
     print("   Detection Merger module loaded successfully")
 except ImportError as e:
@@ -424,7 +424,7 @@ async def analyze_image(
                 # Get detection summary
                 summary = detectron2_model.get_detection_summary(results)
                 
-                # Create visualization with class-based colors
+                # Create visualization with class-based colors and masks
                 output_image_path = os.path.join(TEMP_DIR, f"detectron2_result_{file.filename}")
                 if DETECTION_MERGER_AVAILABLE:
                     # Format detections for visualization
@@ -435,10 +435,18 @@ async def analyze_image(
                             "confidence": detection["confidence"],
                             "bbox": detection["bbox"]
                         })
+
+                    # Extract masks if available
+                    masks = results["predictions"].get("masks", None)
+
+                    # Create visualization with masks
                     annotated_image = create_visualization_with_class_colors(
                         temp_image_path,
                         formatted_detections,
-                        model_name="Detectron2"
+                        model_name="Detectron2",
+                        masks=masks,
+                        draw_masks=True,
+                        mask_alpha=0.4
                     )
                     cv2.imwrite(output_image_path, annotated_image)
                 else:
@@ -449,15 +457,21 @@ async def analyze_image(
                 # Convert result image to base64
                 result_image_base64 = image_to_base64(output_image_path)
                 
+                # Extract polygons from results
+                polygons = results["predictions"].get("polygons", None)
+
                 # Format results and add dimensions if scale is available
                 formatted_detections = []
-                for detection in summary["detection_details"]:
+                for idx, detection in enumerate(summary["detection_details"]):
                     det = {
                         "class_id": detection["class_id"],
                         "class_name": detection["class_name"],
                         "confidence": detection["confidence"],
                         "bbox": detection["bbox"]
                     }
+                    # Add polygon if available
+                    if polygons and idx < len(polygons) and polygons[idx]:
+                        det["polygon"] = polygons[idx]
                     # Add real-world dimensions if scale is available
                     det = calculate_detection_dimensions(det, pixels_per_unit, scale_unit)
                     formatted_detections.append(det)
@@ -565,7 +579,8 @@ async def analyze_image(
                 yolo_detections = []
                 detectron2_detections = []
                 floorplan_detections = []
-                
+                detectron2_masks = []  # Store masks from Detectron2
+
                 # 1. Run YOLO
                 try:
                     yolo_model = load_yolo_model()
@@ -601,16 +616,30 @@ async def analyze_image(
                         print("   Running Detectron2...")
                         d2_results = detectron2_model.predict(temp_image_path)
                         d2_summary = detectron2_model.get_detection_summary(d2_results)
-                        
+
+                        # Extract masks and polygons if available
+                        d2_masks_raw = d2_results["predictions"].get("masks", None)
+                        d2_polygons_raw = d2_results["predictions"].get("polygons", None)
+
                         # Format Detectron2 detections
-                        for detection in d2_summary["detection_details"]:
-                            detectron2_detections.append({
+                        for idx, detection in enumerate(d2_summary["detection_details"]):
+                            det = {
                                 "class_id": detection["class_id"],
                                 "class_name": detection["class_name"],
                                 "confidence": detection["confidence"],
                                 "bbox": detection["bbox"]
-                            })
+                            }
+                            # Add polygon if available
+                            if d2_polygons_raw and idx < len(d2_polygons_raw) and d2_polygons_raw[idx]:
+                                det["polygon"] = d2_polygons_raw[idx]
+                            detectron2_detections.append(det)
+                            # Store corresponding mask
+                            if d2_masks_raw is not None and idx < len(d2_masks_raw):
+                                detectron2_masks.append(d2_masks_raw[idx])
+
                         print(f"      Found {len(detectron2_detections)} Detectron2 detections")
+                        if d2_masks_raw is not None:
+                            print(f"      Extracted {len(detectron2_masks)} segmentation masks")
                     except Exception as e:
                         print(f"   Detectron2 failed: {e}")
                 else:
@@ -676,13 +705,41 @@ async def analyze_image(
                     merged_detections.extend(window_detections)
                 
                 print(f"   Merged to {len(merged_detections)} unique detections")
-                
-                # Create combined visualization
+
+                # Match masks to merged detections
+                # For detections that came from Detectron2, try to match them with their masks
+                merged_masks = []
+                for merged_det in merged_detections:
+                    mask_found = None
+                    # Check if this detection came from Detectron2
+                    if 'detectron2' in merged_det.get('sources', []):
+                        # Try to find matching Detectron2 detection by IoU
+                        best_iou = 0
+                        best_mask_idx = -1
+                        for idx, d2_det in enumerate(detectron2_detections):
+                            # Calculate IoU between merged detection and original D2 detection
+                            iou = calculate_iou(merged_det['bbox'], d2_det['bbox'])
+                            if iou > best_iou and iou > 0.3:  # threshold
+                                best_iou = iou
+                                best_mask_idx = idx
+
+                        # Use the best matching mask
+                        if best_mask_idx >= 0 and best_mask_idx < len(detectron2_masks):
+                            mask_found = detectron2_masks[best_mask_idx]
+
+                    merged_masks.append(mask_found)
+
+                print(f"   Matched {sum(1 for m in merged_masks if m is not None)} masks to merged detections")
+
+                # Create combined visualization with masks
                 print("   Creating combined visualization...")
                 combined_image = create_combined_visualization(
                     image_path=temp_image_path,
                     merged_detections=merged_detections,
-                    show_model_tags=True
+                    show_model_tags=True,
+                    masks=merged_masks,
+                    draw_masks=True,
+                    mask_alpha=0.4
                 )
                 
                 # Save combined result image
@@ -831,8 +888,8 @@ async def analyze_batch(
                     # Detectron2 processing
                     detectron2_results = model.predict(temp_image_path)
                     summary = model.get_detection_summary(detectron2_results)
-                    
-                    # Save result image with class-based colors
+
+                    # Save result image with class-based colors and masks
                     output_image_path = os.path.join(TEMP_DIR, f"batch_detectron2_{file.filename}")
                     if DETECTION_MERGER_AVAILABLE:
                         # Format detections for visualization
@@ -843,26 +900,41 @@ async def analyze_batch(
                                 "confidence": detection["confidence"],
                                 "bbox": detection["bbox"]
                             })
+
+                        # Extract masks if available
+                        masks = detectron2_results["predictions"].get("masks", None)
+
+                        # Create visualization with masks
                         annotated_image = create_visualization_with_class_colors(
                             temp_image_path,
                             formatted_detections,
-                            model_name="Detectron2"
+                            model_name="Detectron2",
+                            masks=masks,
+                            draw_masks=True,
+                            mask_alpha=0.4
                         )
                         cv2.imwrite(output_image_path, annotated_image)
                     else:
                         # Fallback to default Detectron2 visualization
                         cv2.imwrite(output_image_path, detectron2_results["visualized_image"])
                     result_image_base64 = image_to_base64(output_image_path)
-                    
+
+                    # Extract polygons from results
+                    polygons = detectron2_results["predictions"].get("polygons", None)
+
                     # Format results
                     formatted_detections = []
-                    for detection in summary["detection_details"]:
-                        formatted_detections.append({
+                    for idx, detection in enumerate(summary["detection_details"]):
+                        det = {
                             "class_id": detection["class_id"],
                             "class_name": detection["class_name"],
                             "confidence": detection["confidence"],
                             "bbox": detection["bbox"]
-                        })
+                        }
+                        # Add polygon if available
+                        if polygons and idx < len(polygons) and polygons[idx]:
+                            det["polygon"] = polygons[idx]
+                        formatted_detections.append(det)
                     
                     results.append({
                         "filename": file.filename,

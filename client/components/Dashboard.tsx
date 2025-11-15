@@ -369,44 +369,77 @@ export default function Dashboard() {
         // Draw highlighted detection boxes if any
         if (highlightedDetection && highlightedDetection.bbox) {
           const bbox = highlightedDetection.bbox;
-          
+
           // Calculate dimensions with scale
           const imageScale = imageElement.naturalWidth / imageElement.width;
           const x1 = bbox.x1;
           const y1 = bbox.y1;
           const x2 = bbox.x2;
           const y2 = bbox.y2;
-          
+
           // Draw enhanced highlight that works well on both clean and annotated images
           ctx.save();
-          
+
           // Get class-based color for this detection
           const className = highlightedDetection.class_name || 'unknown';
           const classColorHex = getClassColorHex(className);
-          
+
           // Create a more prominent highlight for annotated view with pulsing effect
           const highlightColor = classColorHex;
           const glowIntensity = viewMode === 'annotated' ? 35 : 25;
-          
+
           // Add subtle pulsing effect
           const pulseIntensity = Math.sin(Date.now() * 0.005) * 0.3 + 0.7; // Subtle pulse
-          
-          ctx.shadowColor = highlightColor;
-          ctx.shadowBlur = glowIntensity * pulseIntensity;
-          ctx.strokeStyle = highlightColor;
-          ctx.lineWidth = (viewMode === 'annotated' ? 6 : 4) * pulseIntensity;
-          ctx.setLineDash([]);
-          ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
-          
-          ctx.shadowBlur = 0;
-          ctx.strokeStyle = viewMode === 'annotated' ? '#FFFFFF' : '#FFFFFF';
-          ctx.lineWidth = (viewMode === 'annotated' ? 3 : 2) * pulseIntensity;
-          ctx.strokeRect(x1 + 3, y1 + 3, (x2 - x1) - 6, (y2 - y1) - 6);
-          
-          const fillOpacity = (viewMode === 'annotated' ? 0.25 : 0.15) * pulseIntensity;
-          ctx.fillStyle = getClassColorRGBA(className, fillOpacity);
-          ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
-          
+
+          // Check if polygon data is available (for curved outlines)
+          const polygon = highlightedDetection.polygon;
+
+          if (polygon && polygon.length > 2) {
+            // Draw curved polygon outline
+            ctx.shadowColor = highlightColor;
+            ctx.shadowBlur = glowIntensity * pulseIntensity;
+            ctx.strokeStyle = highlightColor;
+            ctx.lineWidth = (viewMode === 'annotated' ? 6 : 4) * pulseIntensity;
+            ctx.setLineDash([]);
+
+            // Draw outer polygon
+            ctx.beginPath();
+            ctx.moveTo(polygon[0][0], polygon[0][1]);
+            for (let i = 1; i < polygon.length; i++) {
+              ctx.lineTo(polygon[i][0], polygon[i][1]);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // Draw inner white outline
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = (viewMode === 'annotated' ? 3 : 2) * pulseIntensity;
+            ctx.stroke();
+
+            // Fill polygon
+            const fillOpacity = (viewMode === 'annotated' ? 0.25 : 0.15) * pulseIntensity;
+            ctx.fillStyle = getClassColorRGBA(className, fillOpacity);
+            ctx.fill();
+          } else {
+            // Fallback to rectangular box if no polygon data
+            ctx.shadowColor = highlightColor;
+            ctx.shadowBlur = glowIntensity * pulseIntensity;
+            ctx.strokeStyle = highlightColor;
+            ctx.lineWidth = (viewMode === 'annotated' ? 6 : 4) * pulseIntensity;
+            ctx.setLineDash([]);
+            ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = viewMode === 'annotated' ? '#FFFFFF' : '#FFFFFF';
+            ctx.lineWidth = (viewMode === 'annotated' ? 3 : 2) * pulseIntensity;
+            ctx.strokeRect(x1 + 3, y1 + 3, (x2 - x1) - 6, (y2 - y1) - 6);
+
+            const fillOpacity = (viewMode === 'annotated' ? 0.25 : 0.15) * pulseIntensity;
+            ctx.fillStyle = getClassColorRGBA(className, fillOpacity);
+            ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+          }
+
           ctx.restore();
           
           const labelText = highlightedDetection.class_name || 'Detection';

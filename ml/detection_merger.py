@@ -253,16 +253,22 @@ def merge_detections(
 def create_visualization_with_class_colors(
     image_path: str,
     detections: List[Dict[str, Any]],
-    model_name: str = ""
+    model_name: str = "",
+    masks: np.ndarray = None,
+    draw_masks: bool = True,
+    mask_alpha: float = 0.4
 ) -> np.ndarray:
     """
     Create a visualization with class-based colors for any model's detections
-    
+
     Args:
         image_path: Path to the original image or numpy array
         detections: List of detections with bbox and class_name
         model_name: Optional name of the model (for display)
-    
+        masks: Optional numpy array of segmentation masks (N, H, W)
+        draw_masks: If True and masks are available, draw mask contours/overlays
+        mask_alpha: Transparency for mask overlays (0.0 to 1.0)
+
     Returns:
         Annotated image as numpy array
     """
@@ -274,21 +280,42 @@ def create_visualization_with_class_colors(
     else:
         # Assume it's already a numpy array
         image = image_path.copy()
-    
-    for det in detections:
+
+    # Create overlay for masks
+    overlay = image.copy()
+
+    for idx, det in enumerate(detections):
         bbox = det['bbox']
         x1, y1, x2, y2 = int(bbox['x1']), int(bbox['y1']), int(bbox['x2']), int(bbox['y2'])
-        
+
         # Get class-based color
         color = get_class_color(det['class_name'])
-        
-        # Draw bounding box
-        thickness = 2
-        cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
-        
+
+        # Draw mask if available
+        if draw_masks and masks is not None and idx < len(masks):
+            mask = masks[idx]
+            if isinstance(mask, np.ndarray) and mask.size > 0:
+                # Convert mask to uint8
+                mask_uint8 = (mask.astype(np.uint8)) * 255
+
+                # Find contours from the mask
+                contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+                # Draw filled mask on overlay
+                for contour in contours:
+                    cv2.drawContours(overlay, [contour], -1, color, -1)
+
+                # Draw contour outline (thicker for visibility)
+                for contour in contours:
+                    cv2.drawContours(image, [contour], -1, color, 3)
+        else:
+            # Draw bounding box if no mask available
+            thickness = 2
+            cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
+
         # Prepare label
         label = f"{det['class_name']} {det['confidence']:.2f}"
-        
+
         # Draw label background
         (label_width, label_height), baseline = cv2.getTextSize(
             label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2
@@ -300,7 +327,7 @@ def create_visualization_with_class_colors(
             color,
             -1
         )
-        
+
         # Draw label text
         cv2.putText(
             image,
@@ -311,6 +338,10 @@ def create_visualization_with_class_colors(
             (255, 255, 255),
             2
         )
+
+    # Blend overlay with original image for transparent masks
+    if draw_masks and masks is not None:
+        cv2.addWeighted(overlay, mask_alpha, image, 1 - mask_alpha, 0, image)
     
     # Add legend with detected classes
     detected_classes = set()
@@ -405,17 +436,23 @@ def create_combined_visualization(
     image_path: str,
     merged_detections: List[Dict[str, Any]],
     show_model_tags: bool = True,
-    use_class_colors: bool = True
+    use_class_colors: bool = True,
+    masks: List[np.ndarray] = None,
+    draw_masks: bool = True,
+    mask_alpha: float = 0.4
 ) -> np.ndarray:
     """
     Create a combined visualization showing all merged detections
-    
+
     Args:
         image_path: Path to the original image
         merged_detections: List of merged detections
         show_model_tags: Whether to show which models detected each object
         use_class_colors: If True, use class-based colors; if False, use model-based colors
-    
+        masks: Optional list of segmentation masks for each detection
+        draw_masks: If True and masks are available, draw mask contours/overlays
+        mask_alpha: Transparency for mask overlays (0.0 to 1.0)
+
     Returns:
         Annotated image as numpy array
     """
@@ -423,6 +460,9 @@ def create_combined_visualization(
     image = cv2.imread(image_path)
     if image is None:
         raise ValueError(f"Could not read image from {image_path}")
+
+    # Create overlay for masks
+    overlay = image.copy()
     
     # Color mapping for different model combinations (if not using class colors)
     model_color_map = {
@@ -443,20 +483,39 @@ def create_combined_visualization(
         ('yolo', 'detectron2', 'floorplan', 'window_detector'): (75, 0, 130),  # Indigo - All four
     }
     
-    for det in merged_detections:
+    for idx, det in enumerate(merged_detections):
         bbox = det['bbox']
         x1, y1, x2, y2 = int(bbox['x1']), int(bbox['y1']), int(bbox['x2']), int(bbox['y2'])
-        
+
         # Determine color based on class or source models
         if use_class_colors:
             color = get_class_color(det['class_name'])
         else:
             sources_tuple = tuple(sorted(det['sources']))
             color = model_color_map.get(sources_tuple, (128, 128, 128))  # Gray as default
-        
-        # Draw bounding box (thicker if detected by multiple models)
-        thickness = 2 if det['num_models_detected'] == 1 else 3
-        cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
+
+        # Draw mask if available
+        if draw_masks and masks is not None and idx < len(masks):
+            mask = masks[idx]
+            if isinstance(mask, np.ndarray) and mask.size > 0:
+                # Convert mask to uint8
+                mask_uint8 = (mask.astype(np.uint8)) * 255
+
+                # Find contours from the mask
+                contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+                # Draw filled mask on overlay
+                for contour in contours:
+                    cv2.drawContours(overlay, [contour], -1, color, -1)
+
+                # Draw contour outline (thicker if detected by multiple models)
+                thickness = 2 if det['num_models_detected'] == 1 else 3
+                for contour in contours:
+                    cv2.drawContours(image, [contour], -1, color, thickness)
+        else:
+            # Draw bounding box if no mask available (thicker if detected by multiple models)
+            thickness = 2 if det['num_models_detected'] == 1 else 3
+            cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
         
         # Prepare label
         label = f"{det['class_name']}"
@@ -489,7 +548,11 @@ def create_combined_visualization(
             (255, 255, 255),
             2
         )
-    
+
+    # Blend overlay with original image for transparent masks
+    if draw_masks and masks is not None:
+        cv2.addWeighted(overlay, mask_alpha, image, 1 - mask_alpha, 0, image)
+
     # Add legend based on color mode
     if use_class_colors:
         # Show class-based color legend with only classes that are detected
