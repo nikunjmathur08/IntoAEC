@@ -47,13 +47,15 @@ except ImportError as e:
     DETECTION_MERGER_AVAILABLE = False
     print(f"   Detection Merger not available: {e}")
 
-try:
-    from window_detector import detect_windows, create_window_visualization
-    WINDOW_DETECTOR_AVAILABLE = True
-    print("   Window Detector module loaded successfully")
-except ImportError as e:
-    WINDOW_DETECTOR_AVAILABLE = False
-    print(f"   Window Detector not available: {e}")
+# Disabled custom window detector - using YOLO's built-in window detection instead
+# try:
+#     from window_detector import detect_windows, create_window_visualization
+#     WINDOW_DETECTOR_AVAILABLE = True
+#     print("   Window Detector module loaded successfully")
+# except ImportError as e:
+#     WINDOW_DETECTOR_AVAILABLE = False
+#     print(f"   Window Detector not available: {e}")
+WINDOW_DETECTOR_AVAILABLE = False
 
 app = FastAPI(title="IntoAEC YOLO Detection API", version="1.0.0")
 
